@@ -1,4 +1,4 @@
-// lib/features/posts/ui/pages/post_detail_page.dart - Corrigido
+// lib/features/posts/ui/pages/post_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/posts/models/post_model.dart';
@@ -111,7 +111,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   Widget _buildAuthorSection() {
     return GestureDetector(
-      onTap: _navigateToProfile,
+      onTap: () => _navigateToProfile(),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -1,3 +1,4 @@
+// lib/features/profile/ui/pages/profile_edit_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/profile/models/profile_model.dart';
@@ -31,6 +32,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final _ageController = TextEditingController();
   final _interestsController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +64,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       appBar: _buildAppBar(),
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: _handleProfileStateChange,
-        child: _buildBody(),
+        child: Stack(
+          children: [
+            _buildBody(),
+            if (_isLoading) _buildLoadingOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -87,6 +95,56 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           const SizedBox(height: 32),
           _buildSaveButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.3),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          margin: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667eea)),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                widget.isEditing ? 'Salvando alterações...' : 'Criando perfil...',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF2D3748),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Por favor, aguarde',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF718096),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -191,69 +249,100 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   }
 
   Widget _buildSaveButton() {
-    return BlocBuilder<ProfileBloc, ProfileState>(
-      builder: (context, state) {
-        final isLoading = state is ProfileLoading || state is ProfileUpdating;
-
-        return ElevatedButton(
-          onPressed: isLoading ? null : _saveProfile,
-          child: isLoading
-              ? const SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          )
-              : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(widget.isEditing ? Icons.save_rounded : Icons.add_rounded),
-              const SizedBox(width: 8),
-              Text(
-                widget.isEditing ? 'Salvar alterações' : 'Criar perfil',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _saveProfile,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF667eea),
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isLoading) ...[
+              const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               ),
+              const SizedBox(width: 12),
+            ] else ...[
+              Icon(widget.isEditing ? Icons.save_rounded : Icons.add_rounded),
+              const SizedBox(width: 8),
             ],
-          ),
-        );
-      },
+            Text(
+              _isLoading
+                  ? (widget.isEditing ? 'Salvando...' : 'Criando...')
+                  : (widget.isEditing ? 'Salvar alterações' : 'Criar perfil'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   void _handleProfileStateChange(BuildContext context, ProfileState state) {
-    if (state is ProfileError) {
-      _showErrorSnackBar(state.message);
-    } else if (state is ProfileLoaded && !widget.isEditing) {
-      // Perfil criado com sucesso
-      _showSuccessSnackBar('Perfil criado com sucesso!');
-      Navigator.of(context).pop();
-    } else if (state is ProfileUpdateSuccess) {
-      _showSuccessSnackBar(state.message);
-      Navigator.of(context).pop();
+    if (state is ProfileLoading || state is ProfileUpdating) {
+      setState(() {
+        _isLoading = true;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (state is ProfileError) {
+        _showErrorDialog(state.message);
+      } else if (state is ProfileLoaded && !widget.isEditing) {
+        _showSuccessAndClose('Perfil criado com sucesso!');
+      } else if (state is ProfileUpdateSuccess) {
+        _showSuccessAndClose(state.message);
+      }
     }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erro'),
         content: Text(message),
-        backgroundColor: Colors.red,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }
 
-  void _showSuccessSnackBar(String message) {
+  void _showSuccessAndClose(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
       ),
     );
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   void _saveProfile() {
@@ -284,7 +373,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       // Criar novo perfil
       final userId = widget.userId ?? '';
       if (userId.isEmpty) {
-        _showErrorSnackBar('ID do usuário não encontrado');
+        _showErrorDialog('ID do usuário não encontrado');
         return;
       }
 

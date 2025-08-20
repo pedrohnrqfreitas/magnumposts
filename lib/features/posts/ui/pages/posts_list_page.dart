@@ -1,3 +1,4 @@
+// lib/features/posts/ui/pages/posts_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../authentication/ui/bloc/auth_bloc.dart';

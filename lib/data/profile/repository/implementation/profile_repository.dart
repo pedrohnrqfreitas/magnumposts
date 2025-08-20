@@ -1,3 +1,4 @@
+// lib/data/profile/repository/implementation/profile_repository.dart
 import '../../../../core/errors/failure.dart';
 import '../../../../core/result_data.dart';
 import '../../datasource/i_profile_datasource.dart';
@@ -15,7 +16,7 @@ class ProfileRepository implements IProfileRepository {
   Future<ResultData<Failure, ProfileModel?>> getProfile(String userId) async {
     try {
       final profileDTO = await datasource.getProfile(userId);
-      
+
       if (profileDTO == null) {
         return ResultData.success(null);
       }
@@ -23,12 +24,16 @@ class ProfileRepository implements IProfileRepository {
       final profile = ProfileModel.fromDTO(profileDTO);
       return ResultData.success(profile);
 
-    } on Failure catch (e) {
-      return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado ao buscar perfil: $e'),
-      );
+      if (e is Exception) {
+        return ResultData.error(
+          Failure(message: e.toString().replaceAll('Exception: ', '')),
+        );
+      } else {
+        return ResultData.error(
+          Failure(message: 'Erro inesperado ao buscar perfil'),
+        );
+      }
     }
   }
 
@@ -37,12 +42,16 @@ class ProfileRepository implements IProfileRepository {
     try {
       await datasource.createProfile(params);
       return ResultData.success(null);
-    } on Failure catch (e) {
-      return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado ao criar perfil: $e'),
-      );
+      if (e is Exception) {
+        return ResultData.error(
+          Failure(message: e.toString().replaceAll('Exception: ', '')),
+        );
+      } else {
+        return ResultData.error(
+          Failure(message: 'Erro inesperado ao criar perfil'),
+        );
+      }
     }
   }
 
@@ -51,12 +60,16 @@ class ProfileRepository implements IProfileRepository {
     try {
       await datasource.updateProfile(params);
       return ResultData.success(null);
-    } on Failure catch (e) {
-      return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado ao atualizar perfil: $e'),
-      );
+      if (e is Exception) {
+        return ResultData.error(
+          Failure(message: e.toString().replaceAll('Exception: ', '')),
+        );
+      } else {
+        return ResultData.error(
+          Failure(message: 'Erro inesperado ao atualizar perfil'),
+        );
+      }
     }
   }
 
@@ -65,20 +78,28 @@ class ProfileRepository implements IProfileRepository {
     try {
       await datasource.deleteProfile(userId);
       return ResultData.success(null);
-    } on Failure catch (e) {
-      return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado ao deletar perfil: $e'),
-      );
+      if (e is Exception) {
+        return ResultData.error(
+          Failure(message: e.toString().replaceAll('Exception: ', '')),
+        );
+      } else {
+        return ResultData.error(
+          Failure(message: 'Erro inesperado ao deletar perfil'),
+        );
+      }
     }
   }
 
   @override
   Stream<ProfileModel?> watchProfile(String userId) {
-    return datasource.watchProfile(userId).map((dto) {
-      if (dto == null) return null;
-      return ProfileModel.fromDTO(dto);
-    });
+    try {
+      return datasource.watchProfile(userId).map((dto) {
+        if (dto == null) return null;
+        return ProfileModel.fromDTO(dto);
+      });
+    } catch (e) {
+      throw Exception('Erro ao observar perfil');
+    }
   }
 }

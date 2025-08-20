@@ -1,3 +1,4 @@
+// lib/features/profile/ui/pages/profile_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -25,10 +26,12 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   @override
   void initState() {
     super.initState();
+    print('ProfileDetailPage iniciada para userId: ${widget.userId}');
     _loadProfile();
   }
 
   void _loadProfile() {
+    print('Carregando perfil para userId: ${widget.userId}');
     context.read<ProfileBloc>().add(
       ProfileLoadRequested(userId: widget.userId),
     );
@@ -40,13 +43,20 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       appBar: _buildAppBar(),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
+          print('ProfileBloc state changed: ${state.runtimeType}');
           if (state is ProfileError) {
+            print('Profile error: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
         builder: (context, state) {
+          print('Building ProfileDetailPage with state: ${state.runtimeType}');
+
           if (state is ProfileLoading) {
             return _buildLoadingWidget();
           } else if (state is ProfileError) {
@@ -108,76 +118,88 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
 
   Widget _buildErrorWidget(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 64,
-            color: Colors.red,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Erro ao carregar perfil',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF718096),
+            const SizedBox(height: 16),
+            const Text(
+              'Erro ao carregar perfil',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _loadProfile,
-            child: const Text('Tentar novamente'),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF718096),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadProfile,
+              child: const Text('Tentar novamente'),
+            ),
+            const SizedBox(height: 16),
+            // Botão para criar perfil se não existir
+            OutlinedButton(
+              onPressed: _createProfile,
+              child: const Text('Criar perfil'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildNotFoundWidget() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.person_off_rounded,
-            size: 64,
-            color: Color(0xFF718096),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Perfil não encontrado',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Este usuário ainda não possui um perfil criado.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.person_off_rounded,
+              size: 64,
               color: Color(0xFF718096),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _createProfile,
-            child: const Text('Criar perfil'),
-          ),
-        ],
+            const SizedBox(height: 16),
+            const Text(
+              'Perfil não encontrado',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Este usuário ainda não possui um perfil criado.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF718096),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _createProfile,
+              child: const Text('Criar perfil'),
+            ),
+          ],
+        ),
       ),
     );
   }

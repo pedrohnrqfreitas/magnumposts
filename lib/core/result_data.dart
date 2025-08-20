@@ -1,4 +1,4 @@
-
+// lib/core/result_data.dart
 import 'errors/failure.dart';
 
 class ResultData<F, S> {
@@ -32,12 +32,15 @@ class ResultData<F, S> {
       ) {
     if (isSuccess && success != null) {
       return onSuccess(success as S);
-    }
-    else if (!isSuccess && failure != null) {
+    } else if (!isSuccess && failure != null) {
       return onFailure(failure as F);
-    }
-    else {
-      return onFailure(Failure(message: 'Erro desconhecido. O objeto de erro é nulo.') as F);
+    } else {
+      // Fallback seguro
+      if (isSuccess) {
+        return onFailure(Failure(message: 'Dados não encontrados') as F);
+      } else {
+        return onFailure(Failure(message: 'Erro desconhecido') as F);
+      }
     }
   }
 }
