@@ -39,84 +39,84 @@ class DependencyInjection {
   static PostsRepository? _postsRepository;
   static ProfileRepository? _profileRepository;
 
+  // Adicione instâncias de serviços e datasources
+  static FirebaseAuthServiceImpl? _authService;
+  static FirestoreServiceImpl? _firestoreService;
+  static AuthLocalDatasource? _authLocalDatasource;
+  static AuthRemoteDatasource? _authRemoteDatasource;
+  static ProfileFirestoreDatasource? _profileFirestoreDatasource;
+  static PostsRemoteDatasource? _postsRemoteDatasource;
+  static DioHttpService? _dioHttpService;
+
   static Future<void> initialize() async {
     _sharedPreferences = await SharedPreferences.getInstance();
+
+    // Crie todas as instâncias de serviços e datasources aqui
+    _authService = FirebaseAuthServiceImpl();
+    _firestoreService = FirestoreServiceImpl();
+    _authLocalDatasource = AuthLocalDatasource(sharedPreferences: _sharedPreferences!);
+    _authRemoteDatasource = AuthRemoteDatasource(firebaseAuthService: _authService!);
+    _profileFirestoreDatasource = ProfileFirestoreDatasource(firestoreService: _firestoreService!);
+    _dioHttpService = DioHttpService();
+    _postsRemoteDatasource = PostsRemoteDatasource(httpService: _dioHttpService!);
+
+    // Crie as instâncias de repositórios usando as dependências criadas
+    _authRepository = AuthRepository(
+      remoteDatasource: _authRemoteDatasource!,
+      localDatasource: _authLocalDatasource!,
+    );
+
+    _postsRepository = PostsRepository(
+      remoteDatasource: _postsRemoteDatasource!,
+    );
+
+    _profileRepository = ProfileRepository(
+      datasource: _profileFirestoreDatasource!,
+    );
   }
 
   static List<Provider> get providers => [
-    // Use Cases que podem ser acessados diretamente
     Provider<GetUserByIdUseCase>(
-      create: (context) => GetUserByIdUseCase(repository: _getPostsRepository()),
+      create: (context) => GetUserByIdUseCase(repository: _postsRepository!),
     ),
     Provider<GetProfileUseCase>(
-      create: (context) => GetProfileUseCase(repository: _getProfileRepository()),
+      create: (context) => GetProfileUseCase(repository: _profileRepository!),
     ),
     Provider<CreateProfileUseCase>(
-      create: (context) => CreateProfileUseCase(repository: _getProfileRepository()),
+      create: (context) => CreateProfileUseCase(repository: _profileRepository!),
     ),
     Provider<UpdateProfileUseCase>(
-      create: (context) => UpdateProfileUseCase(repository: _getProfileRepository()),
+      create: (context) => UpdateProfileUseCase(repository: _profileRepository!),
     ),
   ];
 
   static List<BlocProvider> get blocProviders => [
-    // Auth BLoC
     BlocProvider<AuthBloc>(
       create: (context) => AuthBloc(
-        loginUseCase: LoginUseCase(repository: _getAuthRepository()),
-        registerUseCase: RegisterUseCase(repository: _getAuthRepository()),
-        logoutUseCase: LogoutUseCase(repository: _getAuthRepository()),
-        getCurrentUserUseCase: GetCurrentUserUseCase(repository: _getAuthRepository()),
-        checkAuthStatusUseCase: CheckAuthStatusUseCase(repository: _getAuthRepository()),
+        loginUseCase: LoginUseCase(repository: _authRepository!),
+        registerUseCase: RegisterUseCase(repository: _authRepository!),
+        logoutUseCase: LogoutUseCase(repository: _authRepository!),
+        getCurrentUserUseCase: GetCurrentUserUseCase(repository: _authRepository!),
+        checkAuthStatusUseCase: CheckAuthStatusUseCase(repository: _authRepository!),
       ),
     ),
 
-    // Posts BLoC
     BlocProvider<PostsBloc>(
       create: (context) => PostsBloc(
-        getPostsUseCase: GetPostsUseCase(repository: _getPostsRepository()),
+        getPostsUseCase: GetPostsUseCase(repository: _postsRepository!),
       ),
     ),
 
-    // Profile BLoC
     BlocProvider<ProfileBloc>(
       create: (context) => ProfileBloc(
-        getProfileUseCase: GetProfileUseCase(repository: _getProfileRepository()),
-        createProfileUseCase: CreateProfileUseCase(repository: _getProfileRepository()),
-        updateProfileUseCase: UpdateProfileUseCase(repository: _getProfileRepository()),
-        profileRepository: _getProfileRepository(),
+        getProfileUseCase: GetProfileUseCase(repository: _profileRepository!),
+        createProfileUseCase: CreateProfileUseCase(repository: _profileRepository!),
+        updateProfileUseCase: UpdateProfileUseCase(repository: _profileRepository!),
+        profileRepository: _profileRepository!,
       ),
     ),
   ];
 
-  // Singleton Repositories
-  static AuthRepository _getAuthRepository() {
-    _authRepository ??= AuthRepository(
-      remoteDatasource: AuthRemoteDatasource(
-        firebaseAuthService: FirebaseAuthServiceImpl(),
-      ),
-      localDatasource: AuthLocalDatasource(
-        sharedPreferences: _sharedPreferences!,
-      ),
-    );
-    return _authRepository!;
-  }
-
-  static PostsRepository _getPostsRepository() {
-    _postsRepository ??= PostsRepository(
-      remoteDatasource: PostsRemoteDatasource(
-        httpService: DioHttpService(),
-      ),
-    );
-    return _postsRepository!;
-  }
-
-  static ProfileRepository _getProfileRepository() {
-    _profileRepository ??= ProfileRepository(
-      datasource: ProfileFirestoreDatasource(
-        firestoreService: FirestoreServiceImpl(),
-      ),
-    );
-    return _profileRepository!;
-  }
+// Os métodos _getAuthRepository(), _getPostsRepository() e _getProfileRepository() não são mais necessários
+// porque os repositórios são criados e armazenados como singletons no método initialize().
 }

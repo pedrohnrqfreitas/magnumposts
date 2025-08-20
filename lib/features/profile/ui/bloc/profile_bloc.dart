@@ -42,7 +42,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     final result = await _getProfileUseCase(event.userId);
 
     result.fold(
-          (failure) => emit(ProfileError(message: failure.message)),
+          (failure) {
+        emit(ProfileError(message: failure.message));
+      },
           (profile) {
         if (profile != null) {
           emit(ProfileLoaded(profile: profile));

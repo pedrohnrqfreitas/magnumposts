@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../authentication/ui/bloc/auth_bloc.dart';
-import '../../../authentication/ui/bloc/auth_event.dart';
 import '../../../authentication/ui/bloc/auth_state.dart';
 import '../../../authentication/ui/pages/login_page.dart';
 import '../../../posts/ui/pages/posts_list_page.dart';

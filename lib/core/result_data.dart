@@ -1,3 +1,6 @@
+
+import 'errors/failure.dart';
+
 class ResultData<F, S> {
   final F? failure;
   final S? success;
@@ -29,8 +32,12 @@ class ResultData<F, S> {
       ) {
     if (isSuccess && success != null) {
       return onSuccess(success as S);
-    } else {
+    }
+    else if (!isSuccess && failure != null) {
       return onFailure(failure as F);
+    }
+    else {
+      return onFailure(Failure(message: 'Erro desconhecido. O objeto de erro é nulo.') as F);
     }
   }
 }

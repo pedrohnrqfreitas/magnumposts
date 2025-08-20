@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../errors/firebase_error_handler.dart';
-import '../../../errors/failure.dart';
 import '../firebase_auth_service.dart';
 
 class FirebaseAuthServiceImpl implements FirebaseAuthService {

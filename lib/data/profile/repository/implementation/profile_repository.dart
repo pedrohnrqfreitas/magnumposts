@@ -15,13 +15,14 @@ class ProfileRepository implements IProfileRepository {
   Future<ResultData<Failure, ProfileModel?>> getProfile(String userId) async {
     try {
       final profileDTO = await datasource.getProfile(userId);
-
+      
       if (profileDTO == null) {
         return ResultData.success(null);
       }
 
       final profile = ProfileModel.fromDTO(profileDTO);
       return ResultData.success(profile);
+
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
