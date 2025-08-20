@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../data/authentication/models/params/login_params.dart';
+import '../../../../data/authentication/models/params/register_params.dart';
 import '../../../../data/authentication/models/user_model.dart';
 
 /// Eventos abstratos para extensibilidade (OCP)
@@ -20,6 +21,16 @@ class AuthLoginRequested extends AuthEvent {
   final LoginParams params;
 
   const AuthLoginRequested({required this.params});
+
+  @override
+  List<Object?> get props => [params];
+}
+
+/// Evento para registro
+class AuthRegisterRequested extends AuthEvent {
+  final RegisterParams params;
+
+  const AuthRegisterRequested({required this.params});
 
   @override
   List<Object?> get props => [params];

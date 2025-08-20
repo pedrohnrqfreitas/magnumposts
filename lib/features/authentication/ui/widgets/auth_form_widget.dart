@@ -125,30 +125,37 @@ class AuthFormWidget extends StatelessWidget {
     if (value == null || value.isEmpty) {
       return 'Email é obrigatório';
     }
-  return null;
-}
 
-/// Validação de senha
-String? _validatePassword(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'Senha é obrigatória';
-  }
-  if (value.length < 6) {
-    return 'Senha deve ter pelo menos 6 caracteres';
-  }
-  return null;
-}
+    // Validação de formato de email
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Por favor, insira um email válido';
+    }
 
-/// Validação de confirmação de senha
-String? _validateConfirmPassword(String? value) {
-  if (!showConfirmPassword) return null;
+    return null;
+  }
 
-  if (value == null || value.isEmpty) {
-    return 'Confirmação de senha é obrigatória';
+  /// Validação de senha
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Senha é obrigatória';
+    }
+    if (value.length < 6) {
+      return 'Senha deve ter pelo menos 6 caracteres';
+    }
+    return null;
   }
-  if (value != passwordController.text) {
-    return 'Senhas não coincidem';
+
+  /// Validação de confirmação de senha
+  String? _validateConfirmPassword(String? value) {
+    if (!showConfirmPassword) return null;
+
+    if (value == null || value.isEmpty) {
+      return 'Confirmação de senha é obrigatória';
+    }
+    if (value != passwordController.text) {
+      return 'Senhas não coincidem';
+    }
+    return null;
   }
-  return null;
-}
 }

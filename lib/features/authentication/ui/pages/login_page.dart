@@ -7,6 +7,8 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/auth_form_widget.dart';
 import '../widgets/auth_header_widget.dart';
+import '../widgets/auth_footer_widget.dart';
+import 'register_page.dart';
 
 /// Página de login seguindo Clean Architecture - apenas login conforme PDF
 class LoginPage extends StatefulWidget {
@@ -86,6 +88,8 @@ class _LoginPageState extends State<LoginPage> {
         _buildLoginForm(),
         const SizedBox(height: 32),
         _buildLoginButton(),
+        const SizedBox(height: 24),
+        _buildRegisterFooter(),
       ],
     );
   }
@@ -144,6 +148,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// Footer com link para registro
+  Widget _buildRegisterFooter() {
+    return AuthFooterWidget(
+      text: 'Não tem uma conta?',
+      buttonText: 'Criar conta',
+      onPressed: _navigateToRegister,
+    );
+  }
+
   /// Executar login - método com responsabilidade única
   void _performLogin() {
     if (_formKey.currentState?.validate() ?? false) {
@@ -156,5 +169,13 @@ class _LoginPageState extends State<LoginPage> {
         AuthLoginRequested(params: params),
       );
     }
+  }
+
+  /// Navegar para página de registro
+  void _navigateToRegister() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RegisterPage()),
+    );
   }
 }

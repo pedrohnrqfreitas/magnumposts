@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase.dart';
 import '../../../../data/authentication/models/params/login_params.dart';
+import '../../../../data/authentication/models/params/register_params.dart';
 import '../../../../data/authentication/models/user_model.dart';
 
 import '../../usercase/check_auth_status_usecase.dart';
 import '../../usercase/get_current_user_usecase.dart';
 import '../../usercase/login_usecase.dart';
 import '../../usercase/logout_usecase.dart';
+import '../../usercase/register_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -15,6 +17,7 @@ import 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // Dependency Inversion - depende de abstrações (use cases)
   final LoginUseCase _loginUseCase;
+  final RegisterUseCase _registerUseCase;
   final LogoutUseCase _logoutUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final CheckAuthStatusUseCase _checkAuthStatusUseCase;
@@ -23,11 +26,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({
     required LoginUseCase loginUseCase,
+    required RegisterUseCase registerUseCase,
     required LogoutUseCase logoutUseCase,
     required GetCurrentUserUseCase getCurrentUserUseCase,
     required CheckAuthStatusUseCase checkAuthStatusUseCase,
   })
       : _loginUseCase = loginUseCase,
+        _registerUseCase = registerUseCase,
         _logoutUseCase = logoutUseCase,
         _getCurrentUserUseCase = getCurrentUserUseCase,
         _checkAuthStatusUseCase = checkAuthStatusUseCase,
@@ -35,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Registrar event handlers
     on<AuthCheckStatusRequested>(_onCheckStatusRequested);
     on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
 
@@ -90,6 +96,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  /// Handler para registro
+  Future<void> _onRegisterRequested(AuthRegisterRequested event,
+      Emitter<AuthState> emit,) async {
+    // Validações básicas
+    if (!_isValidRegisterParams(event.params)) {
+      emit(const AuthError(message: 'Todos os campos são obrigatórios'));
+      return;
+    }
+
+    emit(const AuthLoading(message: 'Criando conta...'));
+
+    final result = await _registerUseCase(event.params);
+
+    result.fold(
+          (failure) => emit(AuthError(message: failure.message)),
+          (authResult) {
+        if (authResult.success && authResult.user != null) {
+          emit(AuthSuccess(
+            message: 'Conta criada com sucesso! Faça login para continuar.',
+            user: authResult.user,
+          ));
+        } else {
+          emit(AuthError(message: authResult.message ?? 'Erro no cadastro'));
+        }
+      },
+    );
+  }
+
   /// Handler para logout
   Future<void> _onLogoutRequested(AuthLogoutRequested event,
       Emitter<AuthState> emit,) async {
@@ -115,8 +149,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Validação de parâmetros de login - Clean Code (método expressivo)
   bool _isValidLoginParams(LoginParams params) {
-    return params.email.isNotEmpty &&
-        params.password.isNotEmpty ;
+    return params.email.isNotEmpty && params.password.isNotEmpty;
   }
 
+  /// Validação de parâmetros de registro
+  bool _isValidRegisterParams(RegisterParams params) {
+    return params.email.isNotEmpty &&
+        params.password.isNotEmpty &&
+        params.confirmPassword.isNotEmpty;
+  }
+
+  @override
+  Future<void> close() {
+    _authStatusSubscription?.cancel();
+    return super.close();
+  }
 }

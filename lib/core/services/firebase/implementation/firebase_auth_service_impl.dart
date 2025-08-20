@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
+import '../../../errors/firebase_error_handler.dart';
+import '../../../errors/failure.dart';
 import '../firebase_auth_service.dart';
 
 class FirebaseAuthServiceImpl implements FirebaseAuthService {
@@ -25,7 +26,9 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw FirebaseErrorHandler.handleAuthError(e);
+    } catch (e) {
+      throw FirebaseErrorHandler.handleAuthError(e);
     }
   }
 
@@ -40,7 +43,9 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw FirebaseErrorHandler.handleAuthError(e);
+    } catch (e) {
+      throw FirebaseErrorHandler.handleAuthError(e);
     }
   }
 
@@ -49,7 +54,9 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
     try {
       await _firebaseAuth.signOut();
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw FirebaseErrorHandler.handleAuthError(e);
+    } catch (e) {
+      throw FirebaseErrorHandler.handleAuthError(e);
     }
   }
 
@@ -57,8 +64,11 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
   Future<void> updateDisplayName(String displayName) async {
     try {
       await _firebaseAuth.currentUser?.updateDisplayName(displayName);
+      await _firebaseAuth.currentUser?.reload();
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw FirebaseErrorHandler.handleAuthError(e);
+    } catch (e) {
+      throw FirebaseErrorHandler.handleAuthError(e);
     }
   }
 
@@ -66,31 +76,11 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
   Future<void> updatePhotoURL(String photoURL) async {
     try {
       await _firebaseAuth.currentUser?.updatePhotoURL(photoURL);
+      await _firebaseAuth.currentUser?.reload();
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    }
-  }
-
-  Exception _handleAuthException(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return Exception('Usuário não encontrado');
-      case 'wrong-password':
-        return Exception('Senha incorreta');
-      case 'email-already-in-use':
-        return Exception('Este email já está em uso');
-      case 'weak-password':
-        return Exception('A senha é muito fraca');
-      case 'invalid-email':
-        return Exception('Email inválido');
-      case 'user-disabled':
-        return Exception('Usuário desabilitado');
-      case 'too-many-requests':
-        return Exception('Muitas tentativas. Tente novamente mais tarde');
-      case 'network-request-failed':
-        return Exception('Erro de conexão. Verifique sua internet');
-      default:
-        return Exception('Erro de autenticação: ${e.message}');
+      throw FirebaseErrorHandler.handleAuthError(e);
+    } catch (e) {
+      throw FirebaseErrorHandler.handleAuthError(e);
     }
   }
 }

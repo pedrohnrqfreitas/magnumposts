@@ -206,7 +206,9 @@ class _RegisterPageState extends State<RegisterPage> {
             : null,
       );
 
-
+      context.read<AuthBloc>().add(
+        AuthRegisterRequested(params: params),
+      );
     }
   }
 }
