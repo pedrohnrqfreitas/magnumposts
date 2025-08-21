@@ -44,10 +44,10 @@ class _SplashPageState extends State<SplashPage> {
   /// Gerencia mudanças de estado de autenticação
   void _handleAuthStateChanges(BuildContext context, AuthState state) {
     switch (state.runtimeType) {
-      case AuthAuthenticated:
+      case AuthAuthenticated _:
         _navigateToHome();
         break;
-      case AuthUnauthenticated:
+      case AuthUnauthenticated _:
         _navigateToLoginWithClearData();
         break;
     // AuthError e AuthLoading são ignorados intencionalmente

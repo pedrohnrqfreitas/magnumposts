@@ -69,33 +69,19 @@ class ProfileModel {
     );
   }
 
-  /// Gera uma URL de avatar mock baseada no nome
   String get avatarUrl {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return imageUrl!;
     }
-    // Gerar avatar mock usando serviço como UI Avatars
-    return 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=667eea&color=ffffff&size=200&rounded=true';
+    // Avatar sempre de uma pessoa real, fixo para cada id
+    return 'https://randomuser.me/api/portraits/men/$userId.jpg';
   }
 
-  /// Obtém as iniciais do nome
-  String get initials {
-    final nameParts = name.split(' ');
-    if (nameParts.length >= 2) {
-      return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
-    } else if (nameParts.isNotEmpty) {
-      return nameParts[0][0].toUpperCase();
-    }
-    return '?';
-  }
-
-  /// Formata os interesses como texto
   String get formattedInterests {
     if (interests.isEmpty) return 'Nenhum interesse informado';
     return interests.join(', ');
   }
 
-  /// Calcula tempo desde criação
   String get memberSince {
     final now = DateTime.now();
     final difference = now.difference(createdAt);

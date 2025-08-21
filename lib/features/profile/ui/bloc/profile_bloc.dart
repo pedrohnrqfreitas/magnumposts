@@ -31,7 +31,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<ProfileLoadRequested>(_onProfileLoadRequested);
     on<ProfileCreateRequested>(_onProfileCreateRequested);
     on<ProfileUpdateRequested>(_onProfileUpdateRequested);
-    on<ProfileWatchRequested>(_onProfileWatchRequested);
   }
 
   Future<void> _onProfileLoadRequested(
@@ -62,7 +61,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       ProfileCreateRequested event,
       Emitter<ProfileState> emit,
       ) async {
-    emit(const ProfileLoading());
+    final currentState = state;
+    if (currentState is ProfileLoaded) {
+      emit(ProfileCreating(currentProfile: currentState.profile));
+    } else {
+      emit(const ProfileLoading());
+    }
 
     try {
       final result = await _createProfileUseCase(event.params);
@@ -147,30 +151,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
-  void _onProfileWatchRequested(
-      ProfileWatchRequested event,
-      Emitter<ProfileState> emit,
-      ) {
-    _profileSubscription?.cancel();
-    emit(const ProfileLoading());
-
-    try {
-      _profileSubscription = _profileRepository.watchProfile(event.userId).listen(
-            (profile) {
-          if (profile != null) {
-            emit(ProfileLoaded(profile: profile));
-          } else {
-            emit(ProfileNotFound(userId: event.userId));
-          }
-        },
-        onError: (_) {
-          emit(ProfileNotFound(userId: event.userId));
-        },
-      );
-    } catch (e) {
-      emit(ProfileNotFound(userId: event.userId));
-    }
-  }
 
   @override
   Future<void> close() {

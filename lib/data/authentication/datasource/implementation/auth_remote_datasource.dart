@@ -69,7 +69,6 @@ class AuthRemoteDatasource implements IAuthDatasource {
         );
       }
 
-      // Atualizar displayName se fornecido
       if (request.displayName != null) {
         await firebaseAuthService.updateDisplayName(request.displayName!);
       }
@@ -128,19 +127,16 @@ class AuthRemoteDatasource implements IAuthDatasource {
 
   @override
   Future<UserResponseDTO?> getCachedUser() async {
-    // Remote datasource não implementa cache
     throw UnimplementedError('Use AuthLocalDatasource para cache');
   }
 
   @override
   Future<void> cacheUser(UserResponseDTO user) async {
-    // Remote datasource não implementa cache
     throw UnimplementedError('Use AuthLocalDatasource para cache');
   }
 
   @override
   Future<void> clearCache() async {
-    // Remote datasource não implementa cache
     throw UnimplementedError('Use AuthLocalDatasource para cache');
   }
 }

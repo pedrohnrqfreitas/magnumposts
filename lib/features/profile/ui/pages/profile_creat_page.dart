@@ -1,36 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../data/profile/models/profile_model.dart';
-import '../../../../data/profile/models/params/update_profile_params.dart';
+
+import '../../../../data/profile/models/params/create_profile_params.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../widgets/succesProfileBottomSheet.dart';
 
-class ProfileEditPage extends StatefulWidget {
-  final ProfileModel profile;
+class ProfileCreatePage extends StatefulWidget {
+  final String userId;
+  final String? userName;
 
-  const ProfileEditPage({
+  const ProfileCreatePage({
     super.key,
-    required this.profile,
+    required this.userId,
+    this.userName,
   });
 
   @override
-  State<ProfileEditPage> createState() => _ProfileEditPageState();
+  State<ProfileCreatePage> createState() => _ProfileCreatePageState();
 }
 
-class _ProfileEditPageState extends State<ProfileEditPage> {
+class _ProfileCreatePageState extends State<ProfileCreatePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _interestsController = TextEditingController();
-
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeFields();
+    if (widget.userName != null) {
+      _nameController.text = widget.userName!;
+    }
   }
 
   @override
@@ -41,14 +44,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     super.dispose();
   }
 
-  void _initializeFields() {
-    _nameController.text = widget.profile.name;
-    _ageController.text = widget.profile.age?.toString() ?? '';
-    _interestsController.text = widget.profile.interests.join(', ');
-  }
-
   void _handleProfileStateChange(BuildContext context, ProfileState state) {
-    if (state is ProfileLoading || state is ProfileUpdating) {
+    if (state is ProfileLoading || state is ProfileCreating) {
       if (!_isLoading) {
         setState(() => _isLoading = true);
       }
@@ -56,12 +53,28 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       if (_isLoading) {
         setState(() => _isLoading = false);
       }
-      if (state is ProfileLoaded) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) Navigator.of(context).pop();
-        });
-      }
+      _showSuccessBottomSheet();
     }
+  }
+
+  void _createProfile() {
+    if (!_formKey.currentState!.validate()) return;
+    final name = _nameController.text.trim();
+    final ageText = _ageController.text.trim();
+    final interestsText = _interestsController.text.trim();
+    final age = ageText.isNotEmpty ? int.tryParse(ageText) : null;
+    final interests = interestsText.isNotEmpty
+        ? interestsText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+        : <String>[];
+    final params = CreateProfileParams(
+      userId: widget.userId,
+      name: name,
+      age: age,
+      interests: interests,
+    );
+    context.read<ProfileBloc>().add(
+          ProfileCreateRequested(params: params),
+        );
   }
 
   void _showSuccessBottomSheet() {
@@ -73,35 +86,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
   }
 
-  void _saveProfile() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final name = _nameController.text.trim();
-    final ageText = _ageController.text.trim();
-    final interestsText = _interestsController.text.trim();
-
-    final age = ageText.isNotEmpty ? int.tryParse(ageText) : null;
-    final interests = interestsText.isNotEmpty
-        ? interestsText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
-        : <String>[];
-
-    final params = UpdateProfileParams(
-      userId: widget.profile.userId,
-      name: name,
-      age: age,
-      interests: interests,
-    );
-
-    context.read<ProfileBloc>().add(
-      ProfileUpdateRequested(params: params),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editar Perfil'),
+        title: const Text('Criar Perfil'),
         backgroundColor: const Color(0xFF667eea),
         foregroundColor: Colors.white,
         elevation: 0,
@@ -129,13 +118,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     return const Column(
       children: [
         Icon(
-          Icons.edit_rounded,
+          Icons.person_add_rounded,
           size: 64,
           color: Color(0xFF667eea),
         ),
         SizedBox(height: 16),
         Text(
-          'Editar suas informações',
+          'Criar seu perfil',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -145,7 +134,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         ),
         SizedBox(height: 8),
         Text(
-          'Atualize suas informações pessoais',
+          'Preencha suas informações básicas',
           style: TextStyle(
             fontSize: 14,
             color: Color(0xFF718096),
@@ -229,7 +218,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _saveProfile,
+        onPressed: _isLoading ? null : _createProfile,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF667eea),
           foregroundColor: Colors.white,
@@ -252,17 +241,17 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               ),
               const SizedBox(width: 12),
               const Text(
-                'Salvando...',
+                'Criando...',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ] else ...[
-              const Icon(Icons.save_rounded),
+              const Icon(Icons.add_rounded),
               const SizedBox(width: 8),
               const Text(
-                'Salvar alterações',
+                'Criar perfil',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

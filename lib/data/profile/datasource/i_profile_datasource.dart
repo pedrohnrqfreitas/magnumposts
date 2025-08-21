@@ -6,6 +6,4 @@ abstract class IProfileDatasource {
   Future<ProfileDTO?> getProfile(String userId);
   Future<void> createProfile(CreateProfileParams params);
   Future<void> updateProfile(UpdateProfileParams params);
-  Future<void> deleteProfile(String userId);
-  Stream<ProfileDTO?> watchProfile(String userId);
 }

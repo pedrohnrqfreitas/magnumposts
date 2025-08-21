@@ -47,7 +47,6 @@ class AuthLocalDatasource implements IAuthDatasource {
     }
   }
 
-  // Local datasource não implementa operações remotas
   @override
   Stream<UserResponseDTO?> get authStateChanges {
     throw UnimplementedError('Use AuthRemoteDatasource para operações remotas');

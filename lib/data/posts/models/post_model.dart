@@ -45,12 +45,10 @@ class PostModel {
     );
   }
 
-  /// Trunca o corpo do post para exibição na lista
   String get truncatedBody {
     if (body.length <= 100) return body;
     return '${body.substring(0, 100)}...';
   }
 
-  /// Verifica se o corpo foi truncado
   bool get isBodyTruncated => body.length > 100;
 }

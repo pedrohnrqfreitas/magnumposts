@@ -1,4 +1,3 @@
-// lib/data/profile/repository/implementation/profile_repository.dart
 import '../../../../core/errors/failure.dart';
 import '../../../../core/result_data.dart';
 import '../../datasource/i_profile_datasource.dart';
@@ -73,33 +72,4 @@ class ProfileRepository implements IProfileRepository {
     }
   }
 
-  @override
-  Future<ResultData<Failure, void>> deleteProfile(String userId) async {
-    try {
-      await datasource.deleteProfile(userId);
-      return ResultData.success(null);
-    } catch (e) {
-      if (e is Exception) {
-        return ResultData.error(
-          Failure(message: e.toString().replaceAll('Exception: ', '')),
-        );
-      } else {
-        return ResultData.error(
-          Failure(message: 'Erro inesperado ao deletar perfil'),
-        );
-      }
-    }
-  }
-
-  @override
-  Stream<ProfileModel?> watchProfile(String userId) {
-    try {
-      return datasource.watchProfile(userId).map((dto) {
-        if (dto == null) return null;
-        return ProfileModel.fromDTO(dto);
-      });
-    } catch (e) {
-      throw Exception('Erro ao observar perfil');
-    }
-  }
 }

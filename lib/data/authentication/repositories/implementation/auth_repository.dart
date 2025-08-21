@@ -123,8 +123,6 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  /// Métodos auxiliares privados seguindo Single Responsibility Principle
-
   LoginRequestDTO _createLoginRequest(LoginParams params) =>
       LoginRequestDTO(email: params.email, password: params.password);
 

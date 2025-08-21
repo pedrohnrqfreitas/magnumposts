@@ -1,8 +1,9 @@
-// lib/features/profile/ui/pages/profile_detail_page.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:magnumposts/features/profile/ui/pages/profile_creat_page.dart';
 import 'package:magnumposts/features/profile/ui/pages/profile_edit_page.dart';
+
 import '../../../../data/profile/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
@@ -40,16 +41,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     return Scaffold(
       appBar: _buildAppBar(),
       body: BlocConsumer<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state is ProfileError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
+        listener: (context, state) {},
         builder: (context, state) {
           if (state is ProfileLoading) {
             return _buildLoadingWidget();
@@ -148,7 +140,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             const SizedBox(height: 16),
             // Botão para criar perfil se não existir
             OutlinedButton(
-              onPressed: _createProfile,
+              onPressed: _navigateToCreateProfile,
               child: const Text('Criar perfil'),
             ),
           ],
@@ -189,7 +181,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _createProfile,
+              onPressed: _navigateToCreateProfile, // Chamando a nova função
               child: const Text('Criar perfil'),
             ),
           ],
@@ -231,43 +223,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         Container(
           width: 120,
           height: 120,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF667eea),
-              width: 4,
-            ),
-          ),
           child: ClipOval(
             child: CachedNetworkImage(
               imageUrl: profile.avatarUrl,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: const Color(0xFF667eea),
-                child: Center(
-                  child: Text(
-                    profile.initials,
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: const Color(0xFF667eea),
-                child: Center(
-                  child: Text(
-                    profile.initials,
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
         ),
@@ -424,7 +383,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     );
   }
 
-
   void _navigateToEditProfile(ProfileModel profile) {
     Navigator.push(
       context,
@@ -437,18 +395,17 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     });
   }
 
-  void _createProfile() {
+  void _navigateToCreateProfile() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfileEditPage(
+        builder: (_) => ProfileCreatePage(
           userId: widget.userId,
           userName: widget.userName,
         ),
       ),
     ).then((_) {
-      // Recarregar perfil após criação
-      _loadProfile();
+      Navigator.of(context).pop();
     });
   }
 }

@@ -8,6 +8,4 @@ abstract class IProfileRepository {
   Future<ResultData<Failure, ProfileModel?>> getProfile(String userId);
   Future<ResultData<Failure, void>> createProfile(CreateProfileParams params);
   Future<ResultData<Failure, void>> updateProfile(UpdateProfileParams params);
-  Future<ResultData<Failure, void>> deleteProfile(String userId);
-  Stream<ProfileModel?> watchProfile(String userId);
 }

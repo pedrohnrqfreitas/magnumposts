@@ -52,15 +52,11 @@ class ProfileUpdating extends ProfileState {
   List<Object?> get props => [currentProfile];
 }
 
-class ProfileUpdateSuccess extends ProfileState {
-  final ProfileModel profile;
-  final String message;
+class ProfileCreating extends ProfileState {
+  final ProfileModel currentProfile;
 
-  const ProfileUpdateSuccess({
-    required this.profile,
-    required this.message,
-  });
+  const ProfileCreating({required this.currentProfile});
 
   @override
-  List<Object?> get props => [profile, message];
+  List<Object?> get props => [currentProfile];
 }
