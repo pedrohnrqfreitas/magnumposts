@@ -1,5 +1,3 @@
-
-
 import '../../../../core/errors/failure.dart';
 import '../../../../core/result_data.dart';
 import '../../datasource/implementation/auth_local_datasource.dart';
@@ -15,24 +13,23 @@ import '../../models/user_model.dart';
 import '../i_auth_repository.dart';
 
 class AuthRepository implements IAuthRepository {
-  final AuthRemoteDatasource remoteDatasource;
-  final AuthLocalDatasource localDatasource;
+  final AuthRemoteDatasource _remoteDatasource;
+  final AuthLocalDatasource _localDatasource;
 
   AuthRepository({
-    required this.remoteDatasource,
-    required this.localDatasource,
-  });
+    required AuthRemoteDatasource remoteDatasource,
+    required AuthLocalDatasource localDatasource,
+  }) : _remoteDatasource = remoteDatasource,
+        _localDatasource = localDatasource;
 
   @override
   Stream<UserModel?> get authStateChanges {
-    return remoteDatasource.authStateChanges.map((userDTO) {
+    return _remoteDatasource.authStateChanges.map((userDTO) {
       if (userDTO != null) {
-        // Cache user when state changes
-        localDatasource.cacheUser(userDTO);
+        _cacheUser(userDTO);
         return UserModel.fromDTO(userDTO);
       } else {
-        // Clear cache when user signs out
-        localDatasource.clearCache();
+        _clearCache();
         return null;
       }
     });
@@ -40,120 +37,116 @@ class AuthRepository implements IAuthRepository {
 
   @override
   UserModel? get currentUser {
-    final userDTO = remoteDatasource.currentUser;
+    final userDTO = _remoteDatasource.currentUser;
     return userDTO != null ? UserModel.fromDTO(userDTO) : null;
   }
 
   @override
   Future<ResultData<Failure, AuthResultModel>> login(LoginParams params) async {
     try {
-      final request = LoginRequestDTO(
-        email: params.email,
-        password: params.password,
-      );
-
-      final authResponse = await remoteDatasource.login(request);
+      final request = _createLoginRequest(params);
+      final authResponse = await _remoteDatasource.login(request);
       final result = AuthResultModel.fromDTO(authResponse);
 
-      if (result.success && result.user != null) {
-        // Cache user on successful login
-        await localDatasource.cacheUser(result.user!.toDTO());
+      if (_isSuccessfulAuth(result)) {
+        await _cacheUser(result.user!.toDTO());
         return ResultData.success(result);
-      } else {
-        return ResultData.error(
-          Failure(message: result.message ?? 'Erro no login'),
-        );
       }
+
+      return ResultData.error(Failure(message: result.message ?? 'Erro no login'));
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado no login: $e'),
-      );
+      return ResultData.error(Failure(message: 'Erro inesperado no login: $e'));
     }
   }
 
   @override
   Future<ResultData<Failure, AuthResultModel>> register(RegisterParams params) async {
     try {
-      final request = RegisterRequestDTO(
-        email: params.email,
-        password: params.password,
-        displayName: params.displayName,
-      );
-
-      final authResponse = await remoteDatasource.register(request);
+      final request = _createRegisterRequest(params);
+      final authResponse = await _remoteDatasource.register(request);
       final result = AuthResultModel.fromDTO(authResponse);
 
-      if (result.success && result.user != null) {
-        // Cache user on successful registration
-        await localDatasource.cacheUser(result.user!.toDTO());
+      if (_isSuccessfulAuth(result)) {
+        await _cacheUser(result.user!.toDTO());
         return ResultData.success(result);
-      } else {
-        return ResultData.error(
-          Failure(message: result.message ?? 'Erro no cadastro'),
-        );
       }
+
+      return ResultData.error(Failure(message: result.message ?? 'Erro no cadastro'));
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro inesperado no cadastro: $e'),
-      );
+      return ResultData.error(Failure(message: 'Erro inesperado no cadastro: $e'));
     }
   }
 
   @override
   Future<ResultData<Failure, void>> logout() async {
     try {
-      await remoteDatasource.logout();
-      await localDatasource.logout();
+      await _remoteDatasource.logout();
+      await _localDatasource.logout();
       return ResultData.success(null);
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro no logout: $e'),
-      );
+      return ResultData.error(Failure(message: 'Erro no logout: $e'));
     }
   }
 
   @override
   Future<ResultData<Failure, UserModel>> updateProfile(UpdateProfileParams params) async {
     try {
-      final request = UpdateProfileRequestDTO(
-        displayName: params.displayName,
-        photoURL: params.photoURL,
-      );
-
-      final userResponse = await remoteDatasource.updateProfile(request);
+      final request = _createUpdateProfileRequest(params);
+      final userResponse = await _remoteDatasource.updateProfile(request);
       final user = UserModel.fromDTO(userResponse);
 
-      // Update cache
-      await localDatasource.cacheUser(userResponse);
-
+      await _cacheUser(userResponse);
       return ResultData.success(user);
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro ao atualizar perfil: $e'),
-      );
+      return ResultData.error(Failure(message: 'Erro ao atualizar perfil: $e'));
     }
   }
 
   @override
   Future<ResultData<Failure, UserModel?>> getCachedUser() async {
     try {
-      final userDTO = await localDatasource.getCachedUser();
+      final userDTO = await _localDatasource.getCachedUser();
       final user = userDTO != null ? UserModel.fromDTO(userDTO) : null;
       return ResultData.success(user);
     } on Failure catch (e) {
       return ResultData.error(e);
     } catch (e) {
-      return ResultData.error(
-        Failure(message: 'Erro ao buscar usuário do cache: $e'),
-      );
+      return ResultData.error(Failure(message: 'Erro ao buscar usuário do cache: $e'));
     }
   }
+
+  /// Métodos auxiliares privados seguindo Single Responsibility Principle
+
+  LoginRequestDTO _createLoginRequest(LoginParams params) =>
+      LoginRequestDTO(email: params.email, password: params.password);
+
+  RegisterRequestDTO _createRegisterRequest(RegisterParams params) =>
+      RegisterRequestDTO(
+        email: params.email,
+        password: params.password,
+        displayName: params.displayName,
+      );
+
+  UpdateProfileRequestDTO _createUpdateProfileRequest(UpdateProfileParams params) =>
+      UpdateProfileRequestDTO(
+        displayName: params.displayName,
+        photoURL: params.photoURL,
+      );
+
+  bool _isSuccessfulAuth(AuthResultModel result) =>
+      result.success && result.user != null;
+
+  Future<void> _cacheUser(dynamic userDTO) =>
+      _localDatasource.cacheUser(userDTO);
+
+  Future<void> _clearCache() =>
+      _localDatasource.clearCache();
 }

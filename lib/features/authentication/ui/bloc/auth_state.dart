@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
 import '../../../../data/authentication/models/user_model.dart';
 
-/// Estados abstratos para extensibilidade (OCP)
+/// Estados de autenticação seguindo Single Responsibility Principle
+/// Cada estado tem uma responsabilidade específica e bem definida
 abstract class AuthState extends Equatable {
   const AuthState();
 
@@ -9,12 +10,12 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Estado inicial - responsabilidade única (SRP)
+/// Estado inicial antes de qualquer operação
 class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
-/// Estado de carregamento com mensagem opcional
+/// Estado de carregamento durante operações assíncronas
 class AuthLoading extends AuthState {
   final String? message;
 
@@ -24,7 +25,7 @@ class AuthLoading extends AuthState {
   List<Object?> get props => [message];
 }
 
-/// Estado de usuário autenticado
+/// Estado quando usuário está autenticado com sucesso
 class AuthAuthenticated extends AuthState {
   final UserModel user;
 
@@ -34,12 +35,12 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
-/// Estado de usuário não autenticado
+/// Estado quando usuário não está autenticado
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
-/// Estado de erro com detalhes
+/// Estado de erro durante operações de autenticação
 class AuthError extends AuthState {
   final String message;
   final String? code;
@@ -53,7 +54,7 @@ class AuthError extends AuthState {
   List<Object?> get props => [message, code];
 }
 
-/// Estado de sucesso para ações específicas
+/// Estado de sucesso para operações específicas (ex: registro)
 class AuthSuccess extends AuthState {
   final String message;
   final UserModel? user;

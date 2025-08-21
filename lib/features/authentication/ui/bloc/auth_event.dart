@@ -3,7 +3,8 @@ import '../../../../data/authentication/models/params/login_params.dart';
 import '../../../../data/authentication/models/params/register_params.dart';
 import '../../../../data/authentication/models/user_model.dart';
 
-/// Eventos abstratos para extensibilidade (OCP)
+/// Eventos de autenticação seguindo o princípio Open/Closed
+/// Novos eventos podem ser adicionados sem modificar os existentes
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
 
@@ -11,12 +12,12 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Evento para verificar status de autenticação
+/// Evento para verificar status inicial de autenticação
 class AuthCheckStatusRequested extends AuthEvent {
   const AuthCheckStatusRequested();
 }
 
-/// Evento para login - Interface específica (ISP)
+/// Evento para realizar login com credenciais
 class AuthLoginRequested extends AuthEvent {
   final LoginParams params;
 
@@ -26,7 +27,7 @@ class AuthLoginRequested extends AuthEvent {
   List<Object?> get props => [params];
 }
 
-/// Evento para registro
+/// Evento para realizar registro de nova conta
 class AuthRegisterRequested extends AuthEvent {
   final RegisterParams params;
 
@@ -36,12 +37,12 @@ class AuthRegisterRequested extends AuthEvent {
   List<Object?> get props => [params];
 }
 
-/// Evento para logout
+/// Evento para realizar logout
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
-/// Evento interno para mudança de estado de auth
+/// Evento interno para mudanças de estado do Firebase
 class AuthStateChanged extends AuthEvent {
   final UserModel? user;
 

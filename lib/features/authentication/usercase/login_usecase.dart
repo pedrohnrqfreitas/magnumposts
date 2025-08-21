@@ -6,12 +6,12 @@ import '../../../data/authentication/models/params/login_params.dart';
 import '../../../data/authentication/repositories/i_auth_repository.dart';
 
 class LoginUseCase implements Usecase<AuthResultModel, LoginParams> {
-  final IAuthRepository repository;
+  final IAuthRepository _repository;
 
-  LoginUseCase({required this.repository});
+  LoginUseCase({required IAuthRepository repository}) : _repository = repository;
 
   @override
   Future<ResultData<Failure, AuthResultModel>> call(LoginParams params) async {
-    return await repository.login(params);
+    return await _repository.login(params);
   }
 }

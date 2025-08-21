@@ -6,42 +6,51 @@ import '../../../data/authentication/models/params/register_params.dart';
 import '../../../data/authentication/repositories/i_auth_repository.dart';
 
 class RegisterUseCase implements Usecase<AuthResultModel, RegisterParams> {
-  final IAuthRepository repository;
+  final IAuthRepository _repository;
 
-  RegisterUseCase({required this.repository});
+  RegisterUseCase({required IAuthRepository repository}) : _repository = repository;
 
   @override
   Future<ResultData<Failure, AuthResultModel>> call(RegisterParams params) async {
-    // Validações básicas
-    if (params.email.isEmpty || params.password.isEmpty || params.confirmPassword.isEmpty) {
-      return ResultData.error(
-        Failure(message: 'Todos os campos são obrigatórios'),
-      );
+    final validationResult = _validateRegistrationParams(params);
+    if (validationResult != null) {
+      return ResultData.error(validationResult);
     }
 
-    // Validação de email básica
+    return await _repository.register(params);
+  }
+
+  /// Validações de negócio centralizadas
+  Failure? _validateRegistrationParams(RegisterParams params) {
+    if (_hasEmptyFields(params)) {
+      return Failure(message: 'Todos os campos são obrigatórios');
+    }
+
     if (!_isValidEmail(params.email)) {
-      return ResultData.error(
-        Failure(message: 'Por favor, insira um email válido'),
-      );
+      return Failure(message: 'Por favor, insira um email válido');
     }
 
-    if (params.password.length < 6) {
-      return ResultData.error(
-        Failure(message: 'Senha deve ter pelo menos 6 caracteres'),
-      );
+    if (!_isValidPassword(params.password)) {
+      return Failure(message: 'Senha deve ter pelo menos 6 caracteres');
     }
 
-    if (params.password != params.confirmPassword) {
-      return ResultData.error(
-        Failure(message: 'Senhas não coincidem'),
-      );
+    if (!_passwordsMatch(params.password, params.confirmPassword)) {
+      return Failure(message: 'Senhas não coincidem');
     }
 
-    return await repository.register(params);
+    return null;
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
+  bool _hasEmptyFields(RegisterParams params) =>
+      params.email.isEmpty ||
+          params.password.isEmpty ||
+          params.confirmPassword.isEmpty;
+
+  bool _isValidEmail(String email) =>
+      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+
+  bool _isValidPassword(String password) => password.length >= 6;
+
+  bool _passwordsMatch(String password, String confirmPassword) =>
+      password == confirmPassword;
 }

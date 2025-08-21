@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Widget de formulário reutilizável - Clean Code (nomes expressivos)
 class AuthFormWidget extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController emailController;
@@ -33,129 +32,176 @@ class AuthFormWidget extends StatelessWidget {
       key: formKey,
       child: Column(
         children: [
-          _buildEmailField(),
+          _EmailField(controller: emailController, hint: emailHint),
           const SizedBox(height: 16),
-          _buildPasswordField(),
+          _PasswordField(
+            controller: passwordController,
+            hint: passwordHint,
+            isVisible: isPasswordVisible,
+            onVisibilityToggle: onPasswordVisibilityToggle,
+          ),
           if (showConfirmPassword) ...[
             const SizedBox(height: 16),
-            _buildConfirmPasswordField(),
+            _ConfirmPasswordField(
+              controller: confirmPasswordController!,
+              hint: confirmPasswordHint ?? 'Confirme sua senha',
+              isVisible: isPasswordVisible,
+              originalPassword: passwordController.text,
+            ),
           ],
         ],
       ),
     );
   }
+}
 
-  /// Campo de email - método expressivo (Clean Code)
-  Widget _buildEmailField() {
+
+class _EmailField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+
+  const _EmailField({required this.controller, required this.hint});
+
+  @override
+  Widget build(BuildContext context) {
     return TextFormField(
-      controller: emailController,
+      controller: controller,
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
-        hintText: emailHint,
+        hintText: hint,
         prefixIcon: const Icon(Icons.email_outlined),
-        border: _buildInputBorder(),
-        enabledBorder: _buildInputBorder(),
-        focusedBorder: _buildInputBorder(isFocused: true),
+        border: _InputBorderStyle.standard(),
+        enabledBorder: _InputBorderStyle.standard(),
+        focusedBorder: _InputBorderStyle.focused(),
         filled: true,
         fillColor: Colors.grey[50],
       ),
-      validator: _validateEmail,
+      validator: _EmailValidator.validate,
     );
   }
+}
 
-  /// Campo de senha - método expressivo
-  Widget _buildPasswordField() {
+class _PasswordField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool isVisible;
+  final VoidCallback onVisibilityToggle;
+
+  const _PasswordField({
+    required this.controller,
+    required this.hint,
+    required this.isVisible,
+    required this.onVisibilityToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return TextFormField(
-      controller: passwordController,
-      obscureText: !isPasswordVisible,
+      controller: controller,
+      obscureText: !isVisible,
       decoration: InputDecoration(
-        hintText: passwordHint,
+        hintText: hint,
         prefixIcon: const Icon(Icons.lock_outlined),
         suffixIcon: IconButton(
-          icon: Icon(
-            isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-          ),
-          onPressed: onPasswordVisibilityToggle,
+          icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility),
+          onPressed: onVisibilityToggle,
         ),
-        border: _buildInputBorder(),
-        enabledBorder: _buildInputBorder(),
-        focusedBorder: _buildInputBorder(isFocused: true),
+        border: _InputBorderStyle.standard(),
+        enabledBorder: _InputBorderStyle.standard(),
+        focusedBorder: _InputBorderStyle.focused(),
         filled: true,
         fillColor: Colors.grey[50],
       ),
-      validator: _validatePassword,
+      validator: _PasswordValidator.validate,
     );
   }
+}
 
-  /// Campo de confirmação de senha
-  Widget _buildConfirmPasswordField() {
-    if (!showConfirmPassword || confirmPasswordController == null) {
-      return const SizedBox.shrink();
-    }
+class _ConfirmPasswordField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool isVisible;
+  final String originalPassword;
 
+  const _ConfirmPasswordField({
+    required this.controller,
+    required this.hint,
+    required this.isVisible,
+    required this.originalPassword,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return TextFormField(
-      controller: confirmPasswordController,
-      obscureText: !isPasswordVisible,
+      controller: controller,
+      obscureText: !isVisible,
       decoration: InputDecoration(
-        hintText: confirmPasswordHint ?? 'Confirme sua senha',
+        hintText: hint,
         prefixIcon: const Icon(Icons.lock_outlined),
-        border: _buildInputBorder(),
-        enabledBorder: _buildInputBorder(),
-        focusedBorder: _buildInputBorder(isFocused: true),
+        border: _InputBorderStyle.standard(),
+        enabledBorder: _InputBorderStyle.standard(),
+        focusedBorder: _InputBorderStyle.focused(),
         filled: true,
         fillColor: Colors.grey[50],
       ),
-      validator: _validateConfirmPassword,
+      validator: (value) => _PasswordValidator.validateConfirmation(value, originalPassword),
     );
   }
+}
 
-  /// Estilo de borda - DRY (Don't Repeat Yourself)
-  InputBorder _buildInputBorder({bool isFocused = false}) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(
-        color: isFocused ? const Color(0xFF667eea) : Colors.grey[300]!,
-        width: isFocused ? 2 : 1,
-      ),
-    );
-  }
+class _InputBorderStyle {
+  static OutlineInputBorder standard() => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+  );
 
-  /// Validação de email - Clean Code (método específico)
-  String? _validateEmail(String? value) {
+  static OutlineInputBorder focused() => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
+  );
+}
+
+class _EmailValidator {
+  static String? validate(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email é obrigatório';
     }
 
-    // Validação de formato de email
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
+    if (!_isValidEmailFormat(value)) {
       return 'Por favor, insira um email válido';
     }
 
     return null;
   }
 
-  /// Validação de senha
-  String? _validatePassword(String? value) {
+  static bool _isValidEmailFormat(String email) =>
+      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+}
+
+class _PasswordValidator {
+  static const int _minLength = 6;
+
+  static String? validate(String? value) {
     if (value == null || value.isEmpty) {
       return 'Senha é obrigatória';
     }
-    if (value.length < 6) {
-      return 'Senha deve ter pelo menos 6 caracteres';
+
+    if (value.length < _minLength) {
+      return 'Senha deve ter pelo menos $_minLength caracteres';
     }
+
     return null;
   }
 
-  /// Validação de confirmação de senha
-  String? _validateConfirmPassword(String? value) {
-    if (!showConfirmPassword) return null;
-
+  static String? validateConfirmation(String? value, String originalPassword) {
     if (value == null || value.isEmpty) {
       return 'Confirmação de senha é obrigatória';
     }
-    if (value != passwordController.text) {
+
+    if (value != originalPassword) {
       return 'Senhas não coincidem';
     }
+
     return null;
   }
 }

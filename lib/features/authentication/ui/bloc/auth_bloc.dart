@@ -4,7 +4,6 @@ import '../../../../core/usecase.dart';
 import '../../../../data/authentication/models/params/login_params.dart';
 import '../../../../data/authentication/models/params/register_params.dart';
 import '../../../../data/authentication/models/user_model.dart';
-
 import '../../usercase/check_auth_status_usecase.dart';
 import '../../usercase/get_current_user_usecase.dart';
 import '../../usercase/login_usecase.dart';
@@ -13,9 +12,7 @@ import '../../usercase/register_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
-/// BLoC seguindo SRP - responsável apenas por gerenciar estado de auth
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  // Dependency Inversion - depende de abstrações (use cases)
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
   final LogoutUseCase _logoutUseCase;
@@ -36,56 +33,56 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _getCurrentUserUseCase = getCurrentUserUseCase,
         _checkAuthStatusUseCase = checkAuthStatusUseCase,
         super(const AuthInitial()) {
-    // Registrar event handlers
-    on<AuthCheckStatusRequested>(_onCheckStatusRequested);
-    on<AuthLoginRequested>(_onLoginRequested);
-    on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthLogoutRequested>(_onLogoutRequested);
-    on<AuthStateChanged>(_onAuthStateChanged);
 
-    // Escutar mudanças de estado de auth
+    /// FLUXO DO BLOC - NUMERADO:
+    /// 1. Registra os handlers de eventos
+    /// 2. Inicia escuta do stream de mudanças de autenticação
+    /// 3. Processa eventos conforme chegam
+    /// 4. Emite novos estados baseados nos resultados
+
+    _registerEventHandlers();
     _subscribeToAuthChanges();
   }
 
-  /// Método privado para escutar mudanças - SRP
+  /// 1. REGISTRO DOS HANDLERS - Mapeia eventos para suas funções correspondentes
+  void _registerEventHandlers() {
+    on<AuthCheckStatusRequested>(_handleCheckStatus);
+    on<AuthLoginRequested>(_handleLogin);
+    on<AuthRegisterRequested>(_handleRegister);
+    on<AuthLogoutRequested>(_handleLogout);
+    on<AuthStateChanged>(_handleAuthStateChange);
+  }
+
+  /// 2. ESCUTA DE MUDANÇAS - Stream reativo do Firebase Auth
   void _subscribeToAuthChanges() {
     _authStatusSubscription = _checkAuthStatusUseCase.execute().listen(
           (user) => add(AuthStateChanged(user: user)),
-      onError: (_) {
-        // Silenciar erros do stream - não queremos mostrar toasts para isso
-        add(const AuthStateChanged(user: null));
-      },
+      onError: (_) => add(const AuthStateChanged(user: null)),
     );
   }
 
-  /// Handler para verificar status - Clean Code (nome expressivo)
-  Future<void> _onCheckStatusRequested(
+  /// 3. VERIFICAÇÃO DE STATUS - Handler para evento de verificação inicial
+  Future<void> _handleCheckStatus(
       AuthCheckStatusRequested event,
       Emitter<AuthState> emit,
       ) async {
     emit(const AuthLoading(message: 'Verificando autenticação...'));
 
-    try {
-      final result = await _getCurrentUserUseCase(NoParams());
+    final result = await _getCurrentUserUseCase(NoParams());
 
-      result.fold(
-            (_) => emit(const AuthUnauthenticated()), // Não mostrar erro aqui
-            (user) => user != null
-            ? emit(AuthAuthenticated(user: user))
-            : emit(const AuthUnauthenticated()),
-      );
-    } catch (e) {
-      // Erro silencioso - apenas marcar como não autenticado
-      emit(const AuthUnauthenticated());
-    }
+    result.fold(
+          (_) => emit(const AuthUnauthenticated()),
+          (user) => user != null
+          ? emit(AuthAuthenticated(user: user))
+          : emit(const AuthUnauthenticated()),
+    );
   }
 
-  /// Handler para login - validações e tratamento de erros
-  Future<void> _onLoginRequested(
+  /// 4. PROCESSO DE LOGIN - Handler para evento de login
+  Future<void> _handleLogin(
       AuthLoginRequested event,
       Emitter<AuthState> emit,
       ) async {
-    // Validações básicas (Clean Code - fail fast)
     if (!_isValidLoginParams(event.params)) {
       emit(const AuthError(message: 'Email e senha são obrigatórios'));
       return;
@@ -93,30 +90,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     emit(const AuthLoading(message: 'Realizando login...'));
 
-    try {
-      final result = await _loginUseCase(event.params);
+    final result = await _loginUseCase(event.params);
 
-      result.fold(
-            (failure) => emit(AuthError(message: failure.message)),
-            (authResult) {
-          if (authResult.success && authResult.user != null) {
-            emit(AuthAuthenticated(user: authResult.user!));
-          } else {
-            emit(AuthError(message: authResult.message ?? 'Erro no login'));
-          }
-        },
-      );
-    } catch (e) {
-      emit(const AuthError(message: 'Erro inesperado no login'));
-    }
+    result.fold(
+          (failure) => emit(AuthError(message: failure.message)),
+          (authResult) => authResult.success && authResult.user != null
+          ? emit(AuthAuthenticated(user: authResult.user!))
+          : emit(AuthError(message: authResult.message ?? 'Erro no login')),
+    );
   }
 
-  /// Handler para registro
-  Future<void> _onRegisterRequested(
+  /// 5. PROCESSO DE REGISTRO - Handler para evento de registro
+  Future<void> _handleRegister(
       AuthRegisterRequested event,
       Emitter<AuthState> emit,
       ) async {
-    // Validações básicas
     if (!_isValidRegisterParams(event.params)) {
       emit(const AuthError(message: 'Todos os campos são obrigatórios'));
       return;
@@ -124,66 +112,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     emit(const AuthLoading(message: 'Criando conta...'));
 
-    try {
-      final result = await _registerUseCase(event.params);
+    final result = await _registerUseCase(event.params);
 
-      result.fold(
-            (failure) => emit(AuthError(message: failure.message)),
-            (authResult) {
-          if (authResult.success && authResult.user != null) {
-            emit(AuthSuccess(
-              message: 'Conta criada com sucesso! Faça login para continuar.',
-              user: authResult.user,
-            ));
-          } else {
-            emit(AuthError(message: authResult.message ?? 'Erro no cadastro'));
-          }
-        },
-      );
-    } catch (e) {
-      emit(const AuthError(message: 'Erro inesperado no cadastro'));
-    }
+    result.fold(
+          (failure) => emit(AuthError(message: failure.message)),
+          (authResult) => authResult.success && authResult.user != null
+          ? emit(AuthSuccess(
+        message: 'Conta criada com sucesso! Faça login para continuar.',
+        user: authResult.user,
+      ))
+          : emit(AuthError(message: authResult.message ?? 'Erro no cadastro')),
+    );
   }
 
-  /// Handler para logout - SEM emitir erros
-  Future<void> _onLogoutRequested(
+  /// 6. PROCESSO DE LOGOUT - Handler para evento de logout
+  Future<void> _handleLogout(
       AuthLogoutRequested event,
       Emitter<AuthState> emit,
       ) async {
-    // NÃO mostrar loading para logout para evitar flicker
-    try {
-      await _logoutUseCase(NoParams());
-      // O stream de authStateChanges vai automaticamente emitir AuthUnauthenticated
-      // Não precisamos emitir nada aqui
-    } catch (e) {
-      // Mesmo se der erro, forçar logout local
-      emit(const AuthUnauthenticated());
-    }
+    await _logoutUseCase(NoParams());
+    // O stream automaticamente emitirá AuthUnauthenticated
   }
 
-  /// Handler para mudança de estado interno
-  void _onAuthStateChanged(
+  /// 7. MUDANÇA DE ESTADO AUTOMÁTICA - Handler para mudanças do Firebase
+  void _handleAuthStateChange(
       AuthStateChanged event,
       Emitter<AuthState> emit,
       ) {
-    if (event.user != null) {
-      emit(AuthAuthenticated(user: event.user!));
-    } else {
-      emit(const AuthUnauthenticated());
-    }
+    event.user != null
+        ? emit(AuthAuthenticated(user: event.user!))
+        : emit(const AuthUnauthenticated());
   }
 
-  /// Validação de parâmetros de login - Clean Code (método expressivo)
-  bool _isValidLoginParams(LoginParams params) {
-    return params.email.isNotEmpty && params.password.isNotEmpty;
-  }
+  /// VALIDAÇÕES - Métodos auxiliares para validação de parâmetros
+  bool _isValidLoginParams(LoginParams params) =>
+      params.email.isNotEmpty && params.password.isNotEmpty;
 
-  /// Validação de parâmetros de registro
-  bool _isValidRegisterParams(RegisterParams params) {
-    return params.email.isNotEmpty &&
-        params.password.isNotEmpty &&
-        params.confirmPassword.isNotEmpty;
-  }
+  bool _isValidRegisterParams(RegisterParams params) =>
+      params.email.isNotEmpty &&
+          params.password.isNotEmpty &&
+          params.confirmPassword.isNotEmpty;
 
   @override
   Future<void> close() {

@@ -129,7 +129,7 @@ class _PostsListPageState extends State<PostsListPage> {
         ),
         IconButton(
           icon: const Icon(Icons.logout_rounded),
-          onPressed: () => _performLogout(),
+          onPressed: _showLogoutConfirmation,
         ),
       ],
     );
@@ -274,9 +274,42 @@ class _PostsListPageState extends State<PostsListPage> {
     );
   }
 
+  /// Exibe diálogo de confirmação antes do logout
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Logout'),
+          content: const Text('Tem certeza que deseja sair?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performLogout();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Sair'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _handleAuthStateChange(BuildContext context, AuthState state) {
     if (state is AuthUnauthenticated) {
-      _navigateToLogin();
+      _navigateToLoginWithClearData();
     }
   }
 
@@ -284,9 +317,13 @@ class _PostsListPageState extends State<PostsListPage> {
     context.read<AuthBloc>().add(const AuthLogoutRequested());
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+  /// Navega para login garantindo que os dados sejam limpos
+  void _navigateToLoginWithClearData() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const LoginPage(clearData: true),
+      ),
+          (route) => false, // Remove todas as rotas anteriores
     );
   }
 

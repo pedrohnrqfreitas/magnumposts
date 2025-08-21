@@ -69,11 +69,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       result.fold(
             (failure) {
-          // Em caso de erro, emitir not found para permitir nova tentativa
           emit(ProfileNotFound(userId: event.params.userId));
         },
-            (_) { log("CRIADOOOOOOOOOOOOOOOOOOOOOOO");
-          // Sucesso - criar um perfil mock e emitir como loaded
+            (_) {
           final mockProfile = ProfileModel(
             userId: event.params.userId,
             name: event.params.name,
@@ -89,7 +87,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         },
       );
     } catch (e) {
-      // Exceção - emitir not found
       emit(ProfileNotFound(userId: event.params.userId));
     }
   }
@@ -117,7 +114,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             emit(ProfileNotFound(userId: event.params.userId));
           }
         },
-            (_) {          log("CRIADOOOOOOOOOOOOOOOOOOOOOOO SO QUE EM OUTRO LUGAR");
+            (_) {
 
             // Sucesso - criar perfil atualizado e emitir
           final updatedProfile = currentState is ProfileLoaded
