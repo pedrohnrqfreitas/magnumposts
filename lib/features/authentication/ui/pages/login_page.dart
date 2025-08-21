@@ -1,4 +1,3 @@
-// lib/features/authentication/ui/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/authentication/models/params/login_params.dart';
@@ -192,16 +191,13 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _errorMessage = null);
   }
 
-  /// Método responsável por limpar todos os dados do formulário
   void _clearFormData() {
     _emailController.clear();
     _passwordController.clear();
     _clearError();
 
-    /// Reset do formulário se existir
     _formKey.currentState?.reset();
 
-    /// Reset da visibilidade da senha
     setState(() {
       _isPasswordVisible = false;
     });

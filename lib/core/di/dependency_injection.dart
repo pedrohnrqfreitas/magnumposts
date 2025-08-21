@@ -39,7 +39,6 @@ class DependencyInjection {
   static PostsRepository? _postsRepository;
   static ProfileRepository? _profileRepository;
 
-  // Adicione instâncias de serviços e datasources
   static FirebaseAuthServiceImpl? _authService;
   static FirestoreServiceImpl? _firestoreService;
   static AuthLocalDatasource? _authLocalDatasource;
@@ -117,6 +116,4 @@ class DependencyInjection {
     ),
   ];
 
-// Os métodos _getAuthRepository(), _getPostsRepository() e _getProfileRepository() não são mais necessários
-// porque os repositórios são criados e armazenados como singletons no método initialize().
 }

@@ -23,7 +23,7 @@ class PostsRepository implements IPostsRepository {
       return ResultData.error(e);
     } catch (e) {
       return ResultData.error(
-        Failure(message: 'Erro inesperado ao buscar posts: $e'),
+        Failure(message: '$e'),
       );
     }
   }

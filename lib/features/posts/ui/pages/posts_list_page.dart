@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:magnumposts/core/widgets/app_empty_state.dart';
+
+import '../../../../core/widgets/app_error_widget.dart';
+import '../../../../data/posts/models/post_model.dart';
+import '../../../../data/posts/models/user_post_model.dart';
 import '../../../authentication/ui/bloc/auth_bloc.dart';
 import '../../../authentication/ui/bloc/auth_event.dart';
 import '../../../authentication/ui/bloc/auth_state.dart';
 import '../../../authentication/ui/pages/login_page.dart';
 import '../../../profile/ui/pages/profile_detail_page.dart';
-import '../../../../data/posts/models/post_model.dart';
-import '../../../../data/posts/models/user_post_model.dart';
 import '../../usecase/get_user_by_id_usecase.dart';
 import '../bloc/posts_bloc.dart';
 import '../bloc/posts_event.dart';
 import '../bloc/posts_state.dart';
+import '../widget/logout_bottomsheet.dart';
 import '../widget/post_card_widget.dart';
 import '../widget/post_skeleton_card.dart';
 import 'post_detail_page.dart';
@@ -25,7 +29,6 @@ class PostsListPage extends StatefulWidget {
 class _PostsListPageState extends State<PostsListPage> {
   final ScrollController _scrollController = ScrollController();
 
-  // Cache para autores dos posts
   final Map<int, UserPostModel> _authorsCache = {};
   final Set<int> _loadingAuthors = {};
 
@@ -60,13 +63,11 @@ class _PostsListPageState extends State<PostsListPage> {
   }
 
   void _refreshPosts() {
-    // Limpar cache de autores ao refreshar
     _authorsCache.clear();
     _loadingAuthors.clear();
     context.read<PostsBloc>().add(const PostRefreshRequested());
   }
 
-  // Método para carregar autor de um post específico
   Future<void> _loadAuthorForPost(int userId) async {
     if (_authorsCache.containsKey(userId) || _loadingAuthors.contains(userId)) {
       return;
@@ -96,7 +97,6 @@ class _PostsListPageState extends State<PostsListPage> {
     }
   }
 
-  // Método para carregar autores em lote
   void _loadAuthorsForPosts(List<PostModel> posts) {
     final uniqueUserIds = posts.map((post) => post.userId).toSet();
 
@@ -108,7 +108,22 @@ class _PostsListPageState extends State<PostsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: const Text('Magnum Posts'),
+        backgroundColor: const Color(0xFF667eea),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _refreshPosts,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: _showLogoutConfirmation,
+          ),
+        ],
+      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: _handleAuthStateChange,
         child: _buildBody(),
@@ -116,49 +131,36 @@ class _PostsListPageState extends State<PostsListPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text('Magnum Posts'),
-      backgroundColor: const Color(0xFF667eea),
-      foregroundColor: Colors.white,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded),
-          onPressed: _refreshPosts,
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout_rounded),
-          onPressed: _showLogoutConfirmation,
-        ),
-      ],
-    );
-  }
-
   Widget _buildBody() {
     return BlocBuilder<PostsBloc, PostsState>(
       builder: (context, state) {
-        if (state is PostsLoading) {
-          return _buildSkeletonLoading();
-        } else if (state is PostsError && state.previousPosts == null) {
-          return _buildErrorWidget(state.message);
-        } else if (state is PostsLoaded) {
-          // Carregar autores quando posts são carregados
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _loadAuthorsForPosts(state.posts);
-          });
-
-          return _buildPostsList(state);
-        } else if (state is PostsLoadingMore) {
-          return _buildPostsList(
+        return switch (state) {
+          PostsLoading() => _buildSkeletonLoading(),
+          PostsError(previousPosts: null) => AppErrorWidget(
+            title: 'Erro ao carregar posts',
+            message: state.message,
+            onRetry: _loadInitialPosts,
+          ),
+          PostsLoaded() => _buildLoadedState(state),
+          PostsLoadingMore() => _buildPostsList(
             PostsLoaded(posts: state.currentPosts),
             showLoadingMore: true,
-          );
-        }
-
-        return _buildEmptyWidget();
+          ),
+          _ => AppEmptyState(
+            title: 'Nenhum post encontrado',
+            message: '',
+            onAction: _loadInitialPosts,
+          ),
+        };
       },
     );
+  }
+
+  Widget _buildLoadedState(PostsLoaded state) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAuthorsForPosts(state.posts);
+    });
+    return _buildPostsList(state);
   }
 
   Widget _buildSkeletonLoading() {
@@ -166,72 +168,6 @@ class _PostsListPageState extends State<PostsListPage> {
       padding: const EdgeInsets.all(16),
       itemCount: 6,
       itemBuilder: (context, index) => const PostSkeletonCard(),
-    );
-  }
-
-  Widget _buildErrorWidget(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 64,
-            color: Colors.red,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Ops! Algo deu errado',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF718096),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _loadInitialPosts,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF667eea),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Tentar novamente'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyWidget() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.article_outlined,
-            size: 64,
-            color: Color(0xFF718096),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Nenhum post encontrado',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -254,7 +190,7 @@ class _PostsListPageState extends State<PostsListPage> {
           return PostCardWidget(
             post: post,
             author: author,
-            isLoadingAuthor: isLoadingAuthor,
+            isLoadingAuthor: author == null || isLoadingAuthor,
             onTap: () => _navigateToPostDetail(post),
             onAvatarTap: () => _navigateToProfile(post, author),
           );
@@ -274,34 +210,12 @@ class _PostsListPageState extends State<PostsListPage> {
     );
   }
 
-  /// Exibe diálogo de confirmação antes do logout
   void _showLogoutConfirmation() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar Logout'),
-          content: const Text('Tem certeza que deseja sair?'),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _performLogout();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Sair'),
-            ),
-          ],
+        return LogoutBottomsheet(
+          onLogout: _performLogout,
         );
       },
     );
@@ -317,13 +231,12 @@ class _PostsListPageState extends State<PostsListPage> {
     context.read<AuthBloc>().add(const AuthLogoutRequested());
   }
 
-  /// Navega para login garantindo que os dados sejam limpos
   void _navigateToLoginWithClearData() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => const LoginPage(clearData: true),
       ),
-          (route) => false, // Remove todas as rotas anteriores
+          (route) => false,
     );
   }
 

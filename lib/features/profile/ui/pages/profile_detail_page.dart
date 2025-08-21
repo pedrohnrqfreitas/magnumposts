@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:magnumposts/features/profile/ui/pages/profile_creat_page.dart';
 import 'package:magnumposts/features/profile/ui/pages/profile_edit_page.dart';
 
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../data/profile/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
@@ -39,47 +41,48 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: Text(widget.userName ?? 'Perfil do Usuário'),
+        backgroundColor: const Color(0xFF667eea),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoaded) {
+                return IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  onPressed: () => _navigateToEditProfile(state.profile),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {},
         builder: (context, state) {
-          if (state is ProfileLoading) {
-            return _buildLoadingWidget();
-          } else if (state is ProfileError) {
-            return _buildErrorWidget(state.message);
-          } else if (state is ProfileNotFound) {
-            return _buildNotFoundWidget();
-          } else if (state is ProfileLoaded) {
-            return _buildProfileContent(state.profile);
-          }
-
-          return _buildEmptyWidget();
+          return switch (state) {
+            ProfileLoading() => _buildLoadingWidget(),
+            ProfileError() => AppErrorWidget(
+              title: 'Erro ao carregar Perfil',
+              message: state.message,
+              onRetry: _loadProfile,
+            ),
+            ProfileNotFound() => _buildNotFoundWidget(),
+            ProfileLoaded() => _buildProfileContent(state.profile),
+            _ => AppEmptyState(
+              title: 'Nenhum post encontrado',
+              message: '',
+              onAction: _loadProfile,
+            ),
+          };
         },
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: Text(widget.userName ?? 'Perfil do Usuário'),
-      backgroundColor: const Color(0xFF667eea),
-      foregroundColor: Colors.white,
-      elevation: 0,
-      actions: [
-        BlocBuilder<ProfileBloc, ProfileState>(
-          builder: (context, state) {
-            if (state is ProfileLoaded) {
-              return IconButton(
-                icon: const Icon(Icons.edit_rounded),
-                onPressed: () => _navigateToEditProfile(state.profile),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ],
-    );
-  }
 
   Widget _buildLoadingWidget() {
     return const Center(
@@ -98,53 +101,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Erro ao carregar perfil',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3748),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadProfile,
-              child: const Text('Tentar novamente'),
-            ),
-            const SizedBox(height: 16),
-            // Botão para criar perfil se não existir
-            OutlinedButton(
-              onPressed: _navigateToCreateProfile,
-              child: const Text('Criar perfil'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -181,7 +137,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _navigateToCreateProfile, // Chamando a nova função
+              onPressed: _navigateToCreateProfile,
               child: const Text('Criar perfil'),
             ),
           ],
@@ -190,96 +146,95 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     );
   }
 
-  Widget _buildEmptyWidget() {
-    return const Center(
-      child: Text(
-        'Estado inesperado',
-        style: TextStyle(
-          fontSize: 16,
-          color: Color(0xFF718096),
-        ),
-      ),
-    );
-  }
 
   Widget _buildProfileContent(ProfileModel profile) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          _buildProfileHeader(profile),
+          Column(
+            children: [
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: profile.avatarUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                profile.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3748),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Membro há ${profile.memberSince}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF718096),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 32),
-          _buildProfileStats(profile),
-          const SizedBox(height: 32),
-          _buildProfileInfo(profile),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader(ProfileModel profile) {
-    return Column(
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          child: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: profile.avatarUrl,
-              fit: BoxFit.cover,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem('Posts', '${profile.postsCount}', Icons.article_rounded),
+                _buildStatDivider(),
+                _buildStatItem(
+                  'Idade',
+                  profile.age?.toString() ?? 'N/A',
+                  Icons.cake_rounded,
+                ),
+                _buildStatDivider(),
+                _buildStatItem(
+                  'Interesses',
+                  '${profile.interests.length}',
+                  Icons.favorite_rounded,
+                ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          profile.name,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Membro há ${profile.memberSince}',
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF718096),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileStats(ProfileModel profile) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('Posts', '${profile.postsCount}', Icons.article_rounded),
-          _buildStatDivider(),
-          _buildStatItem(
-            'Idade',
-            profile.age?.toString() ?? 'N/A',
-            Icons.cake_rounded,
-          ),
-          _buildStatDivider(),
-          _buildStatItem(
-            'Interesses',
-            '${profile.interests.length}',
-            Icons.favorite_rounded,
+          const SizedBox(height: 32),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoSection(
+                'Interesses',
+                profile.formattedInterests,
+                Icons.favorite_rounded,
+              ),
+              if (profile.age != null) ...[
+                const SizedBox(height: 24),
+                _buildInfoSection(
+                  'Idade',
+                  '${profile.age} anos',
+                  Icons.cake_rounded,
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
@@ -315,27 +270,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       width: 1,
       height: 40,
       color: Colors.grey[300],
-    );
-  }
-
-  Widget _buildProfileInfo(ProfileModel profile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInfoSection(
-          'Interesses',
-          profile.formattedInterests,
-          Icons.favorite_rounded,
-        ),
-        if (profile.age != null) ...[
-          const SizedBox(height: 24),
-          _buildInfoSection(
-            'Idade',
-            '${profile.age} anos',
-            Icons.cake_rounded,
-          ),
-        ],
-      ],
     );
   }
 
@@ -390,7 +324,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         builder: (_) => ProfileEditPage(profile: profile),
       ),
     ).then((_) {
-      // Recarregar perfil após edição
       _loadProfile();
     });
   }

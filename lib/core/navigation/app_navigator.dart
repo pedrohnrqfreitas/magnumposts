@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../logging/app_loger.dart';
 
 class AppNavigator {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -11,7 +10,6 @@ class AppNavigator {
       Widget page, {
         Object? arguments,
       }) {
-    AppLogger.navigation('Navigating to: $routeName');
     return _navigator?.push<T>(
       MaterialPageRoute(
         builder: (_) => page,
@@ -26,7 +24,6 @@ class AppNavigator {
         TO? result,
         Object? arguments,
       }) {
-    AppLogger.navigation('Replacing with: $routeName');
     return _navigator?.pushReplacement<T, TO>(
       MaterialPageRoute(
         builder: (_) => page,
@@ -42,7 +39,6 @@ class AppNavigator {
       bool Function(Route<dynamic>) predicate, {
         Object? arguments,
       }) {
-    AppLogger.navigation('Navigating to $routeName and removing until predicate');
     return _navigator?.pushAndRemoveUntil<T>(
       MaterialPageRoute(
         builder: (_) => page,
@@ -53,12 +49,10 @@ class AppNavigator {
   }
 
   static void pop<T extends Object?>([T? result]) {
-    AppLogger.navigation('Popping current route');
     _navigator?.pop<T>(result);
   }
 
   static void popUntil(bool Function(Route<dynamic>) predicate) {
-    AppLogger.navigation('Popping until predicate');
     _navigator?.popUntil(predicate);
   }
 

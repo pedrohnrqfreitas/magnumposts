@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppEmptyState extends StatelessWidget {
   final String title;
   final String message;
-  final IconData icon;
+  final IconData? icon;
   final VoidCallback? onAction;
   final String? actionText;
 
@@ -11,7 +11,7 @@ class AppEmptyState extends StatelessWidget {
     super.key,
     required this.title,
     required this.message,
-    required this.icon,
+    this.icon,
     this.onAction,
     this.actionText,
   });

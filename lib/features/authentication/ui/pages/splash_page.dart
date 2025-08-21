@@ -15,11 +15,13 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   static const Duration _splashDelay = Duration(seconds: 2);
+  static const Duration _timeoutDuration = Duration(seconds: 10);
 
   @override
   void initState() {
     super.initState();
     _initializeAuthCheck();
+    _setupTimeout();
   }
 
   @override
@@ -32,7 +34,6 @@ class _SplashPageState extends State<SplashPage> {
     );
   }
 
-  /// Inicializa verificação de autenticação após delay
   void _initializeAuthCheck() {
     Future.delayed(_splashDelay, () {
       if (mounted) {
@@ -41,17 +42,23 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  /// Gerencia mudanças de estado de autenticação
-  void _handleAuthStateChanges(BuildContext context, AuthState state) {
-    switch (state.runtimeType) {
-      case AuthAuthenticated _:
-        _navigateToHome();
-        break;
-      case AuthUnauthenticated _:
+  void _setupTimeout() {
+    Future.delayed(_timeoutDuration, () {
+      if (mounted) {
         _navigateToLoginWithClearData();
-        break;
-    // AuthError e AuthLoading são ignorados intencionalmente
-    // para manter uma experiência de splash suave
+      }
+    });
+  }
+
+  void _handleAuthStateChanges(BuildContext context, AuthState state) {
+
+    if (state is AuthAuthenticated) {
+      _navigateToHome();
+    } else if (state is AuthUnauthenticated) {
+      _navigateToLoginWithClearData();
+    } else if (state is AuthError) {
+      _navigateToLoginWithClearData();
+    } else if (state is AuthLoading) {
     }
   }
 
@@ -63,7 +70,6 @@ class _SplashPageState extends State<SplashPage> {
     }
   }
 
-  /// Navega para login garantindo que os dados sejam limpos
   void _navigateToLoginWithClearData() {
     if (mounted) {
       Navigator.of(context).pushReplacement(
