@@ -6,10 +6,11 @@ import '../../../authentication/ui/bloc/auth_state.dart';
 import '../../../authentication/ui/pages/login_page.dart';
 import '../../../profile/ui/pages/profile_detail_page.dart';
 import '../../../../data/posts/models/post_model.dart';
+import '../../../../data/posts/models/user_post_model.dart';
+import '../../usecase/get_user_by_id_usecase.dart';
 import '../bloc/posts_bloc.dart';
 import '../bloc/posts_event.dart';
 import '../bloc/posts_state.dart';
-
 import '../widget/post_card_widget.dart';
 import '../widget/post_skeleton_card.dart';
 import 'post_detail_page.dart';
@@ -23,6 +24,10 @@ class PostsListPage extends StatefulWidget {
 
 class _PostsListPageState extends State<PostsListPage> {
   final ScrollController _scrollController = ScrollController();
+
+  // Cache para autores dos posts
+  final Map<int, UserPostModel> _authorsCache = {};
+  final Set<int> _loadingAuthors = {};
 
   @override
   void initState() {
@@ -55,7 +60,49 @@ class _PostsListPageState extends State<PostsListPage> {
   }
 
   void _refreshPosts() {
+    // Limpar cache de autores ao refreshar
+    _authorsCache.clear();
+    _loadingAuthors.clear();
     context.read<PostsBloc>().add(const PostRefreshRequested());
+  }
+
+  // Método para carregar autor de um post específico
+  Future<void> _loadAuthorForPost(int userId) async {
+    if (_authorsCache.containsKey(userId) || _loadingAuthors.contains(userId)) {
+      return;
+    }
+
+    _loadingAuthors.add(userId);
+
+    try {
+      final getUserUseCase = context.read<GetUserByIdUseCase>();
+      final result = await getUserUseCase(userId);
+
+      result.fold(
+            (failure) {
+          _loadingAuthors.remove(userId);
+        },
+            (user) {
+          if (mounted) {
+            setState(() {
+              _authorsCache[userId] = user;
+              _loadingAuthors.remove(userId);
+            });
+          }
+        },
+      );
+    } catch (e) {
+      _loadingAuthors.remove(userId);
+    }
+  }
+
+  // Método para carregar autores em lote
+  void _loadAuthorsForPosts(List<PostModel> posts) {
+    final uniqueUserIds = posts.map((post) => post.userId).toSet();
+
+    for (final userId in uniqueUserIds) {
+      _loadAuthorForPost(userId);
+    }
   }
 
   @override
@@ -96,6 +143,11 @@ class _PostsListPageState extends State<PostsListPage> {
         } else if (state is PostsError && state.previousPosts == null) {
           return _buildErrorWidget(state.message);
         } else if (state is PostsLoaded) {
+          // Carregar autores quando posts são carregados
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadAuthorsForPosts(state.posts);
+          });
+
           return _buildPostsList(state);
         } else if (state is PostsLoadingMore) {
           return _buildPostsList(
@@ -112,7 +164,7 @@ class _PostsListPageState extends State<PostsListPage> {
   Widget _buildSkeletonLoading() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: 6, // Show 6 skeleton cards
+      itemCount: 6,
       itemBuilder: (context, index) => const PostSkeletonCard(),
     );
   }
@@ -196,10 +248,15 @@ class _PostsListPageState extends State<PostsListPage> {
           }
 
           final post = state.posts[index];
+          final author = _authorsCache[post.userId];
+          final isLoadingAuthor = _loadingAuthors.contains(post.userId);
+
           return PostCardWidget(
             post: post,
+            author: author,
+            isLoadingAuthor: isLoadingAuthor,
             onTap: () => _navigateToPostDetail(post),
-            onAvatarTap: () => _navigateToProfile(post),
+            onAvatarTap: () => _navigateToProfile(post, author),
           );
         },
       ),
@@ -242,13 +299,13 @@ class _PostsListPageState extends State<PostsListPage> {
     );
   }
 
-  void _navigateToProfile(PostModel post) {
+  void _navigateToProfile(PostModel post, UserPostModel? author) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ProfileDetailPage(
           userId: post.userId.toString(),
-          userName: 'Usuário ${post.userId}',
+          userName: author?.name ?? 'Usuário ${post.userId}',
         ),
       ),
     );

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../../data/posts/models/post_model.dart';
-import '../../../profile/ui/pages/profile_detail_page.dart';
+import '../../../../data/posts/models/user_post_model.dart';
 
 class PostCardWidget extends StatelessWidget {
   final PostModel post;
+  final UserPostModel? author;
+  final bool isLoadingAuthor;
   final VoidCallback onTap;
   final VoidCallback? onAvatarTap;
 
   const PostCardWidget({
     super.key,
     required this.post,
+    this.author,
+    this.isLoadingAuthor = false,
     required this.onTap,
     this.onAvatarTap,
   });
@@ -49,11 +53,108 @@ class PostCardWidget extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF667eea),
+            ),
+            child: isLoadingAuthor
+                ? const Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            )
+                : Center(
+              child: Text(
+                _getAuthorInitials(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isLoadingAuthor)
+                _buildLoadingSkeleton()
+              else if (author != null) ...[
+                Text(
+                  author!.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '@${author!.username}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF718096),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ] else
+                Text(
+                  'Usuário ${post.userId}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+            ],
+          ),
+        ),
         Text(
           'Post #${post.id}',
           style: const TextStyle(
             fontSize: 12,
             color: Color(0xFF718096),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 100,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 80,
+          height: 12,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       ],
@@ -107,19 +208,15 @@ class PostCardWidget extends StatelessWidget {
     );
   }
 
-  void _navigateToProfile(BuildContext context) {
-    if (onAvatarTap != null) {
-      onAvatarTap!();
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProfileDetailPage(
-            userId: post.userId.toString(),
-            userName: 'Usuário ${post.userId}',
-          ),
-        ),
-      );
+  String _getAuthorInitials() {
+    if (author?.name != null && author!.name.isNotEmpty) {
+      final nameParts = author!.name.split(' ');
+      if (nameParts.length >= 2) {
+        return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
+      } else if (nameParts.isNotEmpty) {
+        return nameParts[0][0].toUpperCase();
+      }
     }
+    return 'U${post.userId}';
   }
 }
