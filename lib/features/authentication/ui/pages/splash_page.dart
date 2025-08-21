@@ -40,27 +40,32 @@ class _SplashPageState extends State<SplashPage> {
     );
   }
 
-  /// Handler para mudanças de estado - Clean Code (método expressivo)
+  /// Handler para mudanças de estado - SEM mostrar erros
   void _handleAuthStateChange(BuildContext context, AuthState state) {
     if (state is AuthAuthenticated) {
       _navigateToHome();
-    } else if (state is AuthUnauthenticated || state is AuthError) {
+    } else if (state is AuthUnauthenticated) {
       _navigateToLogin();
     }
+    // REMOVIDO: Não mostrar erros na splash - apenas redirecionar para login
   }
 
   /// Navegação para home - Clean Code (método expressivo)
   void _navigateToHome() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }
   }
 
   /// Navegação para login - Clean Code (método expressivo)
   void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
   }
 
   /// Conteúdo da splash - Widget separado para organização

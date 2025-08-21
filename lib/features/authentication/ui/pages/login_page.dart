@@ -1,3 +1,4 @@
+// lib/features/authentication/ui/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/authentication/models/params/login_params.dart';
@@ -10,7 +11,7 @@ import '../widgets/auth_header_widget.dart';
 import '../widgets/auth_footer_widget.dart';
 import 'register_page.dart';
 
-/// Página de login seguindo Clean Architecture - apenas login conforme PDF
+/// Página de login seguindo Clean Architecture - SEM TOASTS
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -23,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -46,34 +48,29 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Handler para mudanças de estado - responsabilidade única
+  /// Handler LIMPO - apenas navegação e controle de erro
   void _handleAuthStateChange(BuildContext context, AuthState state) {
     if (state is AuthError) {
-      _showErrorSnackBar(state.message);
+      setState(() {
+        _errorMessage = state.message;
+      });
     } else if (state is AuthAuthenticated) {
       _navigateToHome();
+    } else if (state is AuthLoading) {
+      setState(() {
+        _errorMessage = null;
+      });
     }
   }
 
-  /// Exibir erro - método utilitário
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  /// Navegação para home
   void _navigateToHome() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }
   }
 
-  /// Conteúdo principal da página - organizado em widgets
   Widget _buildLoginContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,6 +83,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 60),
         _buildLoginForm(),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 16),
+          _buildErrorMessage(),
+        ],
         const SizedBox(height: 32),
         _buildLoginButton(),
         const SizedBox(height: 24),
@@ -94,7 +95,36 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Formulário de login - widget separado para organização
+  Widget _buildErrorMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: Colors.red[600],
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLoginForm() {
     return AuthFormWidget(
       formKey: _formKey,
@@ -111,7 +141,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Botão de login com loading - Clean Code
   Widget _buildLoginButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -148,7 +177,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Footer com link para registro
   Widget _buildRegisterFooter() {
     return AuthFooterWidget(
       text: 'Não tem uma conta?',
@@ -157,7 +185,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Executar login - método com responsabilidade única
   void _performLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       final params = LoginParams(
@@ -171,7 +198,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// Navegar para página de registro
   void _navigateToRegister() {
     Navigator.push(
       context,

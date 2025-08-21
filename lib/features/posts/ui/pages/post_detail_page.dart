@@ -91,7 +91,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
           const SizedBox(height: 24),
           _buildBodyContent(),
           const SizedBox(height: 32),
-          _buildBackButton(),
         ],
       ),
     );
@@ -219,36 +218,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  Widget _buildBackButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () => Navigator.of(context).pop(),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF667eea),
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.arrow_back_rounded),
-            SizedBox(width: 8),
-            Text(
-              'Voltar',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   String _getAuthorInitials() {
     if (author?.name != null) {

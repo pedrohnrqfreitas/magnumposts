@@ -75,7 +75,6 @@ class ProfileModel {
       return imageUrl!;
     }
     // Gerar avatar mock usando serviço como UI Avatars
-    final initials = name.split(' ').take(2).map((e) => e[0]).join();
     return 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=667eea&color=ffffff&size=200&rounded=true';
   }
 

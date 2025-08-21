@@ -1,3 +1,4 @@
+// lib/features/authentication/ui/pages/register_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/authentication/models/params/register_params.dart';
@@ -10,7 +11,7 @@ import '../widgets/auth_footer_widget.dart';
 import '../widgets/loading_button_widget.dart';
 import 'login_page.dart';
 
-/// Página de registro seguindo Clean Architecture
+/// Página de registro SEM TOASTS
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -25,6 +26,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   bool _isPasswordVisible = false;
+  String? _errorMessage;
+  String? _successMessage;
 
   @override
   void dispose() {
@@ -51,7 +54,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// AppBar simples - Clean Code
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -63,41 +65,28 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Handler para mudanças de estado
   void _handleAuthStateChange(BuildContext context, AuthState state) {
     if (state is AuthError) {
-      _showErrorSnackBar(state.message);
+      setState(() {
+        _errorMessage = state.message;
+        _successMessage = null;
+      });
     } else if (state is AuthSuccess) {
-      _showSuccessSnackBar(state.message);
+      setState(() {
+        _errorMessage = null;
+        _successMessage = state.message;
+      });
       _navigateToLogin();
+    } else if (state is AuthLoading) {
+      setState(() {
+        _errorMessage = null;
+        _successMessage = null;
+      });
     }
   }
 
-  /// Exibir mensagem de erro
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  /// Exibir mensagem de sucesso
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  /// Navegação para login
   void _navigateToLogin() {
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -106,7 +95,6 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
 
-  /// Conteúdo principal da página
   Widget _buildRegisterContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -121,6 +109,14 @@ class _RegisterPageState extends State<RegisterPage> {
         _buildNameField(),
         const SizedBox(height: 16),
         _buildRegisterForm(),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 16),
+          _buildErrorMessage(),
+        ],
+        if (_successMessage != null) ...[
+          const SizedBox(height: 16),
+          _buildSuccessMessage(),
+        ],
         const SizedBox(height: 24),
         _buildRegisterButton(),
         const SizedBox(height: 24),
@@ -133,7 +129,80 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Campo de nome - widget separado
+  Widget _buildErrorMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: Colors.red[600],
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            color: Colors.green[600],
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _successMessage!,
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Redirecionando para login...',
+                  style: TextStyle(
+                    color: Colors.green[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNameField() {
     return TextFormField(
       controller: _nameController,
@@ -149,7 +218,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Formulário de registro
   Widget _buildRegisterForm() {
     return AuthFormWidget(
       formKey: _formKey,
@@ -169,7 +237,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Botão de registro com loading
   Widget _buildRegisterButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -183,7 +250,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Estilo de borda - reutilizado
   InputBorder _buildInputBorder({bool isFocused = false}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
@@ -194,7 +260,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Executar registro - responsabilidade única
   void _performRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       final params = RegisterParams(

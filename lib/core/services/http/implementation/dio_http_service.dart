@@ -30,20 +30,12 @@ class DioHttpService implements HttpService {
   InterceptorsWrapper _createLoggingInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) {
-        print('Request: ${options.method} ${options.uri}');
-        print('Headers: ${options.headers}');
-        if (options.data != null) {
-          print('Data: ${options.data}');
-        }
         handler.next(options);
       },
       onResponse: (response, handler) {
-        print('Response: ${response.statusCode} ${response.requestOptions.uri}');
         handler.next(response);
       },
       onError: (error, handler) {
-        print('Error: ${error.message}');
-        print('Request: ${error.requestOptions.uri}');
         handler.next(error);
       },
     );

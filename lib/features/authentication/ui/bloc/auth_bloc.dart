@@ -30,8 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required LogoutUseCase logoutUseCase,
     required GetCurrentUserUseCase getCurrentUserUseCase,
     required CheckAuthStatusUseCase checkAuthStatusUseCase,
-  })
-      : _loginUseCase = loginUseCase,
+  })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _logoutUseCase = logoutUseCase,
         _getCurrentUserUseCase = getCurrentUserUseCase,
@@ -52,28 +51,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _subscribeToAuthChanges() {
     _authStatusSubscription = _checkAuthStatusUseCase.execute().listen(
           (user) => add(AuthStateChanged(user: user)),
+      onError: (_) {
+        // Silenciar erros do stream - não queremos mostrar toasts para isso
+        add(const AuthStateChanged(user: null));
+      },
     );
   }
 
   /// Handler para verificar status - Clean Code (nome expressivo)
-  Future<void> _onCheckStatusRequested(AuthCheckStatusRequested event,
-      Emitter<AuthState> emit,) async {
+  Future<void> _onCheckStatusRequested(
+      AuthCheckStatusRequested event,
+      Emitter<AuthState> emit,
+      ) async {
     emit(const AuthLoading(message: 'Verificando autenticação...'));
 
-    final result = await _getCurrentUserUseCase(NoParams());
+    try {
+      final result = await _getCurrentUserUseCase(NoParams());
 
-    result.fold(
-          (failure) => emit(const AuthUnauthenticated()),
-          (user) =>
-      user != null
-          ? emit(AuthAuthenticated(user: user))
-          : emit(const AuthUnauthenticated()),
-    );
+      result.fold(
+            (_) => emit(const AuthUnauthenticated()), // Não mostrar erro aqui
+            (user) => user != null
+            ? emit(AuthAuthenticated(user: user))
+            : emit(const AuthUnauthenticated()),
+      );
+    } catch (e) {
+      // Erro silencioso - apenas marcar como não autenticado
+      emit(const AuthUnauthenticated());
+    }
   }
 
   /// Handler para login - validações e tratamento de erros
-  Future<void> _onLoginRequested(AuthLoginRequested event,
-      Emitter<AuthState> emit,) async {
+  Future<void> _onLoginRequested(
+      AuthLoginRequested event,
+      Emitter<AuthState> emit,
+      ) async {
     // Validações básicas (Clean Code - fail fast)
     if (!_isValidLoginParams(event.params)) {
       emit(const AuthError(message: 'Email e senha são obrigatórios'));
@@ -82,23 +93,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     emit(const AuthLoading(message: 'Realizando login...'));
 
-    final result = await _loginUseCase(event.params);
+    try {
+      final result = await _loginUseCase(event.params);
 
-    result.fold(
-          (failure) => emit(AuthError(message: failure.message)),
-          (authResult) {
-        if (authResult.success && authResult.user != null) {
-          emit(AuthAuthenticated(user: authResult.user!));
-        } else {
-          emit(AuthError(message: authResult.message ?? 'Erro no login'));
-        }
-      },
-    );
+      result.fold(
+            (failure) => emit(AuthError(message: failure.message)),
+            (authResult) {
+          if (authResult.success && authResult.user != null) {
+            emit(AuthAuthenticated(user: authResult.user!));
+          } else {
+            emit(AuthError(message: authResult.message ?? 'Erro no login'));
+          }
+        },
+      );
+    } catch (e) {
+      emit(const AuthError(message: 'Erro inesperado no login'));
+    }
   }
 
   /// Handler para registro
-  Future<void> _onRegisterRequested(AuthRegisterRequested event,
-      Emitter<AuthState> emit,) async {
+  Future<void> _onRegisterRequested(
+      AuthRegisterRequested event,
+      Emitter<AuthState> emit,
+      ) async {
     // Validações básicas
     if (!_isValidRegisterParams(event.params)) {
       emit(const AuthError(message: 'Todos os campos são obrigatórios'));
@@ -107,39 +124,48 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     emit(const AuthLoading(message: 'Criando conta...'));
 
-    final result = await _registerUseCase(event.params);
+    try {
+      final result = await _registerUseCase(event.params);
 
-    result.fold(
-          (failure) => emit(AuthError(message: failure.message)),
-          (authResult) {
-        if (authResult.success && authResult.user != null) {
-          emit(AuthSuccess(
-            message: 'Conta criada com sucesso! Faça login para continuar.',
-            user: authResult.user,
-          ));
-        } else {
-          emit(AuthError(message: authResult.message ?? 'Erro no cadastro'));
-        }
-      },
-    );
+      result.fold(
+            (failure) => emit(AuthError(message: failure.message)),
+            (authResult) {
+          if (authResult.success && authResult.user != null) {
+            emit(AuthSuccess(
+              message: 'Conta criada com sucesso! Faça login para continuar.',
+              user: authResult.user,
+            ));
+          } else {
+            emit(AuthError(message: authResult.message ?? 'Erro no cadastro'));
+          }
+        },
+      );
+    } catch (e) {
+      emit(const AuthError(message: 'Erro inesperado no cadastro'));
+    }
   }
 
-  /// Handler para logout
-  Future<void> _onLogoutRequested(AuthLogoutRequested event,
-      Emitter<AuthState> emit,) async {
-    emit(const AuthLoading(message: 'Saindo...'));
-
-    final result = await _logoutUseCase(NoParams());
-
-    result.fold(
-          (failure) => emit(AuthError(message: failure.message)),
-          (_) => emit(const AuthUnauthenticated()),
-    );
+  /// Handler para logout - SEM emitir erros
+  Future<void> _onLogoutRequested(
+      AuthLogoutRequested event,
+      Emitter<AuthState> emit,
+      ) async {
+    // NÃO mostrar loading para logout para evitar flicker
+    try {
+      await _logoutUseCase(NoParams());
+      // O stream de authStateChanges vai automaticamente emitir AuthUnauthenticated
+      // Não precisamos emitir nada aqui
+    } catch (e) {
+      // Mesmo se der erro, forçar logout local
+      emit(const AuthUnauthenticated());
+    }
   }
 
   /// Handler para mudança de estado interno
-  void _onAuthStateChanged(AuthStateChanged event,
-      Emitter<AuthState> emit,) {
+  void _onAuthStateChanged(
+      AuthStateChanged event,
+      Emitter<AuthState> emit,
+      ) {
     if (event.user != null) {
       emit(AuthAuthenticated(user: event.user!));
     } else {

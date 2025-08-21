@@ -1,4 +1,3 @@
-// lib/features/posts/ui/pages/posts_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../authentication/ui/bloc/auth_bloc.dart';
@@ -7,11 +6,11 @@ import '../../../authentication/ui/bloc/auth_state.dart';
 import '../../../authentication/ui/pages/login_page.dart';
 import '../../../profile/ui/pages/profile_detail_page.dart';
 import '../../../../data/posts/models/post_model.dart';
-import '../../../profile/ui/widgets/post_card_widget.dart';
 import '../bloc/posts_bloc.dart';
 import '../bloc/posts_event.dart';
 import '../bloc/posts_state.dart';
 
+import '../widget/post_card_widget.dart';
 import '../widget/post_skeleton_card.dart';
 import 'post_detail_page.dart';
 

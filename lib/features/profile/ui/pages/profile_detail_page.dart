@@ -26,12 +26,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   @override
   void initState() {
     super.initState();
-    print('ProfileDetailPage iniciada para userId: ${widget.userId}');
     _loadProfile();
   }
 
   void _loadProfile() {
-    print('Carregando perfil para userId: ${widget.userId}');
     context.read<ProfileBloc>().add(
       ProfileLoadRequested(userId: widget.userId),
     );
@@ -43,9 +41,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       appBar: _buildAppBar(),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
-          print('ProfileBloc state changed: ${state.runtimeType}');
           if (state is ProfileError) {
-            print('Profile error: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -55,8 +51,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
           }
         },
         builder: (context, state) {
-          print('Building ProfileDetailPage with state: ${state.runtimeType}');
-
           if (state is ProfileLoading) {
             return _buildLoadingWidget();
           } else if (state is ProfileError) {
@@ -226,8 +220,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
           _buildProfileStats(profile),
           const SizedBox(height: 32),
           _buildProfileInfo(profile),
-          const SizedBox(height: 32),
-          _buildBackButton(),
         ],
       ),
     );
@@ -432,28 +424,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     );
   }
 
-  Widget _buildBackButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.arrow_back_rounded),
-            SizedBox(width: 8),
-            Text(
-              'Voltar',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _navigateToEditProfile(ProfileModel profile) {
     Navigator.push(

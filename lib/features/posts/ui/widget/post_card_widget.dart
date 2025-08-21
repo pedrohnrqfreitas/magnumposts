@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../../data/posts/models/post_model.dart';
+import '../../../profile/ui/pages/profile_detail_page.dart';
 
 class PostCardWidget extends StatelessWidget {
   final PostModel post;
   final VoidCallback onTap;
+  final VoidCallback? onAvatarTap;
 
   const PostCardWidget({
     super.key,
     required this.post,
     required this.onTap,
+    this.onAvatarTap,
   });
 
   @override
@@ -27,7 +30,7 @@ class PostCardWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 12),
               _buildTitle(),
               const SizedBox(height: 8),
@@ -43,47 +46,15 @@ class PostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: const Color(0xFF667eea),
-          child: Text(
-            'U${post.userId}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+        Text(
+          'Post #${post.id}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF718096),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Usuário ${post.userId}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-              Text(
-                'Post #${post.id}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF718096),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Icon(
-          Icons.chevron_right_rounded,
-          color: Color(0xFF718096),
         ),
       ],
     );
@@ -134,5 +105,21 @@ class PostCardWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _navigateToProfile(BuildContext context) {
+    if (onAvatarTap != null) {
+      onAvatarTap!();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfileDetailPage(
+            userId: post.userId.toString(),
+            userName: 'Usuário ${post.userId}',
+          ),
+        ),
+      );
+    }
   }
 }

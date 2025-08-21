@@ -1,5 +1,3 @@
-// lib/core/result_data.dart
-import 'errors/failure.dart';
 
 class ResultData<F, S> {
   final F? failure;
@@ -32,15 +30,14 @@ class ResultData<F, S> {
       ) {
     if (isSuccess && success != null) {
       return onSuccess(success as S);
-    } else if (!isSuccess && failure != null) {
+    } else if (failure != null) {
       return onFailure(failure as F);
     } else {
-      // Fallback seguro
-      if (isSuccess) {
-        return onFailure(Failure(message: 'Dados não encontrados') as F);
-      } else {
-        return onFailure(Failure(message: 'Erro desconhecido') as F);
-      }
+      throw Exception('ResultData em estado inconsistente');
     }
   }
+
+  bool get isError => !isSuccess;
+  bool get hasData => success != null;
+  bool get hasError => failure != null;
 }

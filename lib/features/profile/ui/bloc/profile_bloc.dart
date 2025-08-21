@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/profile/models/profile_model.dart';
 import '../../../../data/profile/repository/i_profile_repository.dart';
@@ -43,7 +44,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final result = await _getProfileUseCase(event.userId);
 
       result.fold(
-            (failure) => emit(ProfileError(message: failure.message)),
+            (_) => emit(ProfileNotFound(userId: event.userId)),
             (profile) {
           if (profile != null) {
             emit(ProfileLoaded(profile: profile));
@@ -53,6 +54,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         },
       );
     } catch (e) {
+      emit(ProfileNotFound(userId: event.userId));
     }
   }
 
@@ -66,17 +68,29 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final result = await _createProfileUseCase(event.params);
 
       result.fold(
-            (failure) => emit(ProfileError(message: failure.message)),
-            (_) {
-          // Aguardar um pouco e carregar o perfil criado
-          Future.delayed(const Duration(milliseconds: 1500), () {
-            if (!emit.isDone) {
-              add(ProfileLoadRequested(userId: event.params.userId));
-            }
-          });
+            (failure) {
+          // Em caso de erro, emitir not found para permitir nova tentativa
+          emit(ProfileNotFound(userId: event.params.userId));
+        },
+            (_) { log("CRIADOOOOOOOOOOOOOOOOOOOOOOO");
+          // Sucesso - criar um perfil mock e emitir como loaded
+          final mockProfile = ProfileModel(
+            userId: event.params.userId,
+            name: event.params.name,
+            imageUrl: event.params.imageUrl,
+            postsCount: 0,
+            age: event.params.age,
+            interests: event.params.interests,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+          emit(ProfileLoaded(profile: mockProfile));
         },
       );
     } catch (e) {
+      // Exceção - emitir not found
+      emit(ProfileNotFound(userId: event.params.userId));
     }
   }
 
@@ -96,18 +110,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       result.fold(
             (failure) {
+          // Em caso de erro, voltar ao estado anterior se possível
           if (currentState is ProfileLoaded) {
             emit(ProfileLoaded(profile: currentState.profile));
+          } else {
+            emit(ProfileNotFound(userId: event.params.userId));
           }
-          emit(ProfileError(message: failure.message));
         },
-            (_) {
-          // Criar perfil temporário para o success
-          final tempProfile = currentState is ProfileLoaded
-              ? currentState.profile
+            (_) {          log("CRIADOOOOOOOOOOOOOOOOOOOOOOO SO QUE EM OUTRO LUGAR");
+
+            // Sucesso - criar perfil atualizado e emitir
+          final updatedProfile = currentState is ProfileLoaded
+              ? currentState.profile.copyWith(
+            name: event.params.name,
+            age: event.params.age,
+            interests: event.params.interests,
+            updatedAt: DateTime.now(),
+          )
               : ProfileModel(
             userId: event.params.userId,
-            name: event.params.name ?? 'Nome não informado',
+            name: event.params.name ?? 'Nome',
             postsCount: event.params.postsCount ?? 0,
             age: event.params.age,
             interests: event.params.interests ?? [],
@@ -115,19 +137,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             updatedAt: DateTime.now(),
           );
 
-          emit(ProfileUpdateSuccess(
-            profile: tempProfile,
-            message: 'Perfil atualizado com sucesso!',
-          ));
-
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            if (!emit.isDone) {
-              add(ProfileLoadRequested(userId: event.params.userId));
-            }
-          });
+          emit(ProfileLoaded(profile: updatedProfile));
         },
       );
-    } catch (e) {}
+    } catch (e) {
+      // Exceção - voltar ao estado anterior ou not found
+      if (currentState is ProfileLoaded) {
+        emit(ProfileLoaded(profile: currentState.profile));
+      } else {
+        emit(ProfileNotFound(userId: event.params.userId));
+      }
+    }
   }
 
   void _onProfileWatchRequested(
@@ -141,13 +161,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       _profileSubscription = _profileRepository.watchProfile(event.userId).listen(
             (profile) {
           if (profile != null) {
+            emit(ProfileLoaded(profile: profile));
           } else {
+            emit(ProfileNotFound(userId: event.userId));
           }
         },
-        onError: (error) {
+        onError: (_) {
+          emit(ProfileNotFound(userId: event.userId));
         },
       );
     } catch (e) {
+      emit(ProfileNotFound(userId: event.userId));
     }
   }
 
