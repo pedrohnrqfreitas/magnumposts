@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/skeleton_text.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/posts/models/post_model.dart';
 import '../../../../data/posts/models/user_post_model.dart';
 
@@ -29,16 +30,16 @@ class PostCardWidget extends StatelessWidget {
 
   Widget _buildSkeletonCard() {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: AppConstants.marginM),
+      elevation: AppConstants.cardElevation,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
       ),
       child: InkWell(
         onTap: null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppConstants.paddingS),
           child: SkeletonLoader(
             isLoading: true,
             child: Column(
@@ -47,46 +48,48 @@ class PostCardWidget extends StatelessWidget {
                 Row(
                   children: [
                     const SkeletonBox(
-                      width: 40,
-                      height: 40,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      width: AppConstants.avatarSizeS,
+                      height: AppConstants.avatarSizeS,
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(AppConstants.avatarRadiusM),
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppConstants.paddingXs),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SkeletonBox(
                             width: 120,
-                            height: 14,
-                            borderRadius: BorderRadius.circular(4),
+                            height: AppConstants.fontSizeXs,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
                           ),
                           const SizedBox(height: 4),
                           SkeletonBox(
                             width: 80,
-                            height: 12,
-                            borderRadius: BorderRadius.circular(4),
+                            height: AppConstants.fontSizeXxs,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
                           ),
                         ],
                       ),
                     ),
                     SkeletonBox(
                       width: 50,
-                      height: 12,
-                      borderRadius: BorderRadius.circular(4),
+                      height: AppConstants.fontSizeXxs,
+                      borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppConstants.paddingXs),
                 const SkeletonText(
-                  height: 16,
-                  lines: 2,
+                  height: AppConstants.fontSizeS,
+                  lines: AppConstants.maxLinesTitle,
                   spacing: 4,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppConstants.paddingXxs),
                 const SkeletonText(
-                  height: 14,
-                  lines: 3,
+                  height: AppConstants.fontSizeXs,
+                  lines: AppConstants.maxLinesSubtitle,
                   spacing: 4,
                 ),
               ],
@@ -99,104 +102,104 @@ class PostCardWidget extends StatelessWidget {
 
   Widget _buildNormalCard() {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: AppConstants.marginM),
+      elevation: AppConstants.cardElevation,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppConstants.paddingS),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          Row(
-          children: [
-          GestureDetector(
-          onTap: author != null ? onAvatarTap : null,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF667eea),
-              ),
-              child: Center(
-                child: Text(
-                  _getAuthorInitials(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  author?.name ?? 'Usuário ${post.userId}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3748),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (author != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '@${author!.username}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF718096),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: author != null ? onAvatarTap : null,
+                    child: Container(
+                      width: AppConstants.avatarSizeS,
+                      height: AppConstants.avatarSizeS,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(AppConstants.primaryColorValue),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _getAuthorInitials(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppConstants.fontSizeS,
+                          ),
+                        ),
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: AppConstants.paddingXs),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          author?.name ?? '${AppConstants.userFallbackPrefix}${post.userId}',
+                          style: const TextStyle(
+                            fontSize: AppConstants.fontSizeXs,
+                            fontWeight: FontWeight.w600,
+                            color: Color(AppConstants.textColorPrimaryValue),
+                          ),
+                          maxLines: AppConstants.maxLinesSingle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (author != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '@${author!.username}',
+                            style: const TextStyle(
+                              fontSize: AppConstants.fontSizeXxs,
+                              color: Color(AppConstants.textColorTertiaryValue),
+                            ),
+                            maxLines: AppConstants.maxLinesSingle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${AppConstants.postIdPrefix}${post.id}',
+                    style: const TextStyle(
+                      fontSize: AppConstants.fontSizeXxs,
+                      color: Color(AppConstants.textColorTertiaryValue),
+                    ),
                   ),
                 ],
-              ],
-            ),
-          ),
-          Text(
-            'Post #${post.id}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF718096),
-            ),
-          ),
-          ],
-        ),
-              const SizedBox(height: 12),
+              ),
+              const SizedBox(height: AppConstants.paddingXs),
               Text(
                 post.title,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: AppConstants.fontSizeS,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3748),
-                  height: 1.3,
+                  color: Color(AppConstants.textColorPrimaryValue),
+                  height: AppConstants.lineHeightCompact,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppConstants.paddingXxs),
               Text(
                 post.truncatedBody,
                 style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF4A5568),
-                  height: 1.4,
+                  fontSize: AppConstants.fontSizeXs,
+                  color: Color(AppConstants.textColorSecondaryValue),
+                  height: AppConstants.lineHeightNormal,
                 ),
-                maxLines: 3,
+                maxLines: AppConstants.maxLinesSubtitle,
                 overflow: TextOverflow.ellipsis,
               ),
               if (post.isBodyTruncated) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppConstants.paddingXxs),
                 _buildSeeMoreButton(),
               ],
             ],
@@ -206,22 +209,21 @@ class PostCardWidget extends StatelessWidget {
     );
   }
 
-
   Widget _buildSeeMoreButton() {
     return Align(
       alignment: Alignment.centerLeft,
       child: TextButton(
         onPressed: onTap,
         style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF667eea),
+          foregroundColor: const Color(AppConstants.primaryColorValue),
           padding: EdgeInsets.zero,
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         child: const Text(
-          'Ver mais',
+          AppConstants.seeMoreText,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: AppConstants.fontSizeXs,
             fontWeight: FontWeight.w600,
           ),
         ),

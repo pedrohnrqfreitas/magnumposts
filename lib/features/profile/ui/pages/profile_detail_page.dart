@@ -6,6 +6,7 @@ import 'package:magnumposts/features/profile/ui/pages/profile_edit_page.dart';
 
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_widget.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/profile/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
@@ -42,8 +43,8 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.userName ?? 'Perfil do Usuário'),
-        backgroundColor: const Color(0xFF667eea),
+        title: Text(widget.userName ?? AppConstants.profileDetailTitle),
+        backgroundColor: const Color(AppConstants.primaryColorValue),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -60,259 +61,338 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
           ),
         ],
       ),
-      body: BlocConsumer<ProfileBloc, ProfileState>(
-        listener: (context, state) {},
+      body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
-          return switch (state) {
-            ProfileLoading() => _buildLoadingWidget(),
-            ProfileError() => AppErrorWidget(
+          if (state is ProfileLoading) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(AppConstants.primaryColorValue),
+                    ),
+                  ),
+                  SizedBox(height: AppConstants.paddingS),
+                  Text(
+                    AppConstants.loadingProfileMessage,
+                    style: TextStyle(
+                      fontSize: AppConstants.fontSizeS,
+                      color: Color(AppConstants.textColorTertiaryValue),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (state is ProfileError) {
+            return AppErrorWidget(
               title: 'Erro ao carregar Perfil',
               message: state.message,
               onRetry: _loadProfile,
-            ),
-            ProfileNotFound() => _buildNotFoundWidget(),
-            ProfileLoaded() => _buildProfileContent(state.profile),
-            _ => AppEmptyState(
-              title: 'Nenhum post encontrado',
-              message: '',
-              onAction: _loadProfile,
-            ),
-          };
-        },
-      ),
-    );
-  }
+            );
+          }
 
-
-  Widget _buildLoadingWidget() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667eea)),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Carregando perfil...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF718096),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotFoundWidget() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.person_off_rounded,
-              size: 64,
-              color: Color(0xFF718096),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Perfil não encontrado',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3748),
+          if (state is ProfileNotFound) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppConstants.paddingL),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.person_off_rounded,
+                      size: AppConstants.iconSizeXxl,
+                      color: Color(AppConstants.textColorTertiaryValue),
+                    ),
+                    const SizedBox(height: AppConstants.paddingS),
+                    const Text(
+                      AppConstants.profileNotFoundTitle,
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeL,
+                        fontWeight: FontWeight.bold,
+                        color: Color(AppConstants.textColorPrimaryValue),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.paddingXxs),
+                    const Text(
+                      AppConstants.profileNotFoundMessage,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeXs,
+                        color: Color(AppConstants.textColorTertiaryValue),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.paddingL),
+                    ElevatedButton(
+                      onPressed: _navigateToCreateProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(AppConstants.primaryColorValue),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(AppConstants.buttonHeight),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                        ),
+                      ),
+                      child: const Text(AppConstants.createProfileButtonText),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Este usuário ainda não possui um perfil criado.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _navigateToCreateProfile,
-              child: const Text('Criar perfil'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+            );
+          }
 
-
-  Widget _buildProfileContent(ProfileModel profile) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Column(
-            children: [
-              SizedBox(
-                width: 120,
-                height: 120,
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: profile.avatarUrl,
-                    fit: BoxFit.cover,
+          if (state is ProfileLoaded) {
+            final profile = state.profile;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(AppConstants.paddingL),
+              child: Column(
+                children: [
+                  // Header do perfil
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: AppConstants.profileImageSize,
+                        height: AppConstants.profileImageSize,
+                        child: ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: profile.avatarUrl,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppConstants.paddingS),
+                      Text(
+                        profile.name,
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeXl,
+                          fontWeight: FontWeight.bold,
+                          color: Color(AppConstants.textColorPrimaryValue),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppConstants.paddingXxs),
+                      Text(
+                        '${AppConstants.memberSinceText}${profile.memberSince}',
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeXs,
+                          color: Color(AppConstants.textColorTertiaryValue),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                profile.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Membro há ${profile.memberSince}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF718096),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Posts', '${profile.postsCount}', Icons.article_rounded),
-                _buildStatDivider(),
-                _buildStatItem(
-                  'Idade',
-                  profile.age?.toString() ?? 'N/A',
-                  Icons.cake_rounded,
-                ),
-                _buildStatDivider(),
-                _buildStatItem(
-                  'Interesses',
-                  '${profile.interests.length}',
-                  Icons.favorite_rounded,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoSection(
-                'Interesses',
-                profile.formattedInterests,
-                Icons.favorite_rounded,
-              ),
-              if (profile.age != null) ...[
-                const SizedBox(height: 24),
-                _buildInfoSection(
-                  'Idade',
-                  '${profile.age} anos',
-                  Icons.cake_rounded,
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+                  const SizedBox(height: AppConstants.dimenXs),
 
+                  // Estatísticas
+                  Container(
+                    padding: const EdgeInsets.all(AppConstants.paddingM),
+                    decoration: BoxDecoration(
+                      color: const Color(AppConstants.backgroundColorLightValue),
+                      borderRadius: BorderRadius.circular(AppConstants.borderRadiusL),
+                      border: Border.all(
+                        color: const Color(AppConstants.borderColorLightValue),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Icon(
+                              Icons.article_rounded,
+                              size: AppConstants.iconSizeM,
+                              color: Color(AppConstants.primaryColorValue),
+                            ),
+                            const SizedBox(height: AppConstants.paddingXxs),
+                            Text(
+                              '${profile.postsCount}',
+                              style: const TextStyle(
+                                fontSize: AppConstants.fontSizeL,
+                                fontWeight: FontWeight.bold,
+                                color: Color(AppConstants.textColorPrimaryValue),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              AppConstants.postsStatsLabel,
+                              style: TextStyle(
+                                fontSize: AppConstants.fontSizeXxs,
+                                color: Color(AppConstants.textColorTertiaryValue),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: AppConstants.statsDividerWidth,
+                          height: AppConstants.statsContainerHeight,
+                          color: const Color(AppConstants.borderColorLightValue),
+                        ),
+                        Column(
+                          children: [
+                            const Icon(
+                              Icons.cake_rounded,
+                              size: AppConstants.iconSizeM,
+                              color: Color(AppConstants.primaryColorValue),
+                            ),
+                            const SizedBox(height: AppConstants.paddingXxs),
+                            Text(
+                              profile.age?.toString() ?? AppConstants.ageNotAvailable,
+                              style: const TextStyle(
+                                fontSize: AppConstants.fontSizeL,
+                                fontWeight: FontWeight.bold,
+                                color: Color(AppConstants.textColorPrimaryValue),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              AppConstants.ageStatsLabel,
+                              style: TextStyle(
+                                fontSize: AppConstants.fontSizeXxs,
+                                color: Color(AppConstants.textColorTertiaryValue),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: AppConstants.statsDividerWidth,
+                          height: AppConstants.statsContainerHeight,
+                          color: const Color(AppConstants.borderColorLightValue),
+                        ),
+                        Column(
+                          children: [
+                            const Icon(
+                              Icons.favorite_rounded,
+                              size: AppConstants.iconSizeM,
+                              color: Color(AppConstants.primaryColorValue),
+                            ),
+                            const SizedBox(height: AppConstants.paddingXxs),
+                            Text(
+                              '${profile.interests.length}',
+                              style: const TextStyle(
+                                fontSize: AppConstants.fontSizeL,
+                                fontWeight: FontWeight.bold,
+                                color: Color(AppConstants.textColorPrimaryValue),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              AppConstants.interestsStatsLabel,
+                              style: TextStyle(
+                                fontSize: AppConstants.fontSizeXxs,
+                                color: Color(AppConstants.textColorTertiaryValue),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.dimenXs),
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          size: 24,
-          color: const Color(0xFF667eea),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF718096),
-          ),
-        ),
-      ],
-    );
-  }
+                  // Seção de Interesses
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppConstants.paddingS),
+                    decoration: BoxDecoration(
+                      color: const Color(AppConstants.backgroundColorCardValue),
+                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      border: Border.all(
+                        color: const Color(AppConstants.borderColorLightValue),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.favorite_rounded,
+                              size: AppConstants.iconSizeS,
+                              color: Color(AppConstants.primaryColorValue),
+                            ),
+                            SizedBox(width: AppConstants.paddingXxs),
+                            Text(
+                              AppConstants.interestsStatsLabel,
+                              style: TextStyle(
+                                fontSize: AppConstants.fontSizeS,
+                                fontWeight: FontWeight.w600,
+                                color: Color(AppConstants.textColorPrimaryValue),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppConstants.paddingXs),
+                        Text(
+                          profile.formattedInterests,
+                          style: const TextStyle(
+                            fontSize: AppConstants.fontSizeXs,
+                            color: Color(AppConstants.textColorSecondaryValue),
+                            height: AppConstants.lineHeightRelaxed,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-  Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 40,
-      color: Colors.grey[300],
-    );
-  }
-
-  Widget _buildInfoSection(String title, String content, IconData icon) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: const Color(0xFF667eea),
+                  // Seção de Idade (se disponível)
+                  if (profile.age != null) ...[
+                    const SizedBox(height: AppConstants.paddingL),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppConstants.paddingS),
+                      decoration: BoxDecoration(
+                        color: const Color(AppConstants.backgroundColorCardValue),
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                        border: Border.all(
+                          color: const Color(AppConstants.borderColorLightValue),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.cake_rounded,
+                                size: AppConstants.iconSizeS,
+                                color: Color(AppConstants.primaryColorValue),
+                              ),
+                              SizedBox(width: AppConstants.paddingXxs),
+                              Text(
+                                AppConstants.ageStatsLabel,
+                                style: TextStyle(
+                                  fontSize: AppConstants.fontSizeS,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(AppConstants.textColorPrimaryValue),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppConstants.paddingXs),
+                          Text(
+                            '${profile.age}${AppConstants.ageUnitText}',
+                            style: const TextStyle(
+                              fontSize: AppConstants.fontSizeXs,
+                              color: Color(AppConstants.textColorSecondaryValue),
+                              height: AppConstants.lineHeightRelaxed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            content,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF4A5568),
-              height: 1.5,
-            ),
-          ),
-        ],
+            );
+          }
+
+          return AppEmptyState(
+            title: AppConstants.noPostsErrorMessage,
+            message: '',
+            onAction: _loadProfile,
+          );
+        },
       ),
     );
   }

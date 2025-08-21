@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/skeleton_text.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class PostSkeletonCard extends StatelessWidget {
   const PostSkeletonCard({super.key});
@@ -9,22 +10,22 @@ class PostSkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: AppConstants.marginM),
+      elevation: AppConstants.cardElevation,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.paddingS),
         child: SkeletonLoader(
           isLoading: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderSkeleton(),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.paddingXs),
               _buildTitleSkeleton(),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppConstants.paddingXxs),
               _buildBodySkeleton(),
             ],
           ),
@@ -37,25 +38,27 @@ class PostSkeletonCard extends StatelessWidget {
     return Row(
       children: [
         const SkeletonBox(
-          width: 40,
-          height: 40,
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          width: AppConstants.avatarSizeS,
+          height: AppConstants.avatarSizeS,
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppConstants.avatarRadiusM),
+          ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppConstants.paddingXs),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SkeletonBox(
                 width: 100,
-                height: 16,
-                borderRadius: BorderRadius.circular(4),
+                height: AppConstants.fontSizeS,
+                borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
               ),
               const SizedBox(height: 4),
               SkeletonBox(
                 width: 60,
-                height: 12,
-                borderRadius: BorderRadius.circular(4),
+                height: AppConstants.fontSizeXxs,
+                borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
               ),
             ],
           ),
@@ -66,16 +69,16 @@ class PostSkeletonCard extends StatelessWidget {
 
   Widget _buildTitleSkeleton() {
     return const SkeletonText(
-      height: 16,
-      lines: 2,
+      height: AppConstants.fontSizeS,
+      lines: AppConstants.maxLinesTitle,
       spacing: 4,
     );
   }
 
   Widget _buildBodySkeleton() {
     return const SkeletonText(
-      height: 14,
-      lines: 3,
+      height: AppConstants.fontSizeXs,
+      lines: AppConstants.maxLinesSubtitle,
       spacing: 4,
     );
   }

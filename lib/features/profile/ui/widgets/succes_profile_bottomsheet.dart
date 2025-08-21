@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_constants.dart';
+
 class SuccessProfileBottomSheet extends StatelessWidget {
   const SuccessProfileBottomSheet({super.key});
 
@@ -7,40 +9,41 @@ class SuccessProfileBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(AppConstants.backgroundColorCardValue),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(AppConstants.borderRadiusL),
+          topRight: Radius.circular(AppConstants.borderRadiusL),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppConstants.paddingL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.check_circle_rounded,
               color: Colors.green,
-              size: 64,
+              size: AppConstants.iconSizeXxl,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppConstants.paddingS),
             const Text(
-              'Perfil criado com sucesso!',
+              AppConstants.profileSuccessTitle,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: AppConstants.fontSizeL,
                 fontWeight: FontWeight.bold,
+                color: Color(AppConstants.textColorPrimaryValue),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppConstants.paddingXxs),
             const Text(
-              'Seu novo perfil já está disponível.',
+              AppConstants.profileSuccessMessage,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
+                fontSize: AppConstants.fontSizeXs,
+                color: Color(AppConstants.textColorTertiaryValue),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppConstants.paddingL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -49,14 +52,20 @@ class SuccessProfileBottomSheet extends StatelessWidget {
                   Navigator.of(context).pop(); // Volta para ProfileDetailPage
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF667eea),
+                  backgroundColor: const Color(AppConstants.primaryColorValue),
                   foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
+                  minimumSize: const Size.fromHeight(AppConstants.buttonHeight),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                   ),
                 ),
-                child: const Text('OK'),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    fontSize: AppConstants.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],

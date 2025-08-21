@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Botão com loading reutilizável - extensível (OCP)
+import '../../../../core/constants/app_constants.dart';
+
 class LoadingButtonWidget extends StatelessWidget {
   final String text;
   final bool isLoading;
@@ -24,46 +25,50 @@ class LoadingButtonWidget extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? const Color(0xFF667eea),
-        minimumSize: const Size.fromHeight(56),
+        backgroundColor: backgroundColor ?? const Color(AppConstants.primaryColorValue),
+        minimumSize: const Size.fromHeight(AppConstants.buttonHeight),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         ),
-        elevation: 0,
+        elevation: AppConstants.authCardElevation,
       ),
-      child: _buildButtonContent(),
-    );
-  }
-
-  /// Conteúdo do botão - método privado (Clean Code)
-  Widget _buildButtonContent() {
-    if (isLoading) {
-      return const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, color: textColor ?? Colors.white),
-          const SizedBox(width: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isLoading) ...[
+            const SizedBox(
+              height: AppConstants.iconSizeS,
+              width: AppConstants.iconSizeS,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            const SizedBox(width: AppConstants.paddingXs),
+            Text(
+              AppConstants.loggingInMessage, // ou outra mensagem baseada no contexto
+              style: TextStyle(
+                fontSize: AppConstants.fontSizeS,
+                fontWeight: FontWeight.w600,
+                color: textColor ?? Colors.white,
+              ),
+            ),
+          ] else ...[
+            if (icon != null) ...[
+              Icon(icon, color: textColor ?? Colors.white),
+              const SizedBox(width: AppConstants.paddingXxs),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: AppConstants.fontSizeS,
+                fontWeight: FontWeight.w600,
+                color: textColor ?? Colors.white,
+              ),
+            ),
+          ],
         ],
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: textColor ?? Colors.white,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

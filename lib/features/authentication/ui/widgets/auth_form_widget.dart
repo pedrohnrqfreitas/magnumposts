@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class AuthFormWidget extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -32,176 +33,141 @@ class AuthFormWidget extends StatelessWidget {
       key: formKey,
       child: Column(
         children: [
-          _EmailField(controller: emailController, hint: emailHint),
-          const SizedBox(height: 16),
-          _PasswordField(
-            controller: passwordController,
-            hint: passwordHint,
-            isVisible: isPasswordVisible,
-            onVisibilityToggle: onPasswordVisibilityToggle,
+          // Campo Email
+          TextFormField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              hintText: emailHint,
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                  width: AppConstants.authInputBorderWidth,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                  width: AppConstants.authInputBorderWidth,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(AppConstants.primaryColorValue),
+                  width: AppConstants.authInputFocusedBorderWidth,
+                ),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AppConstants.emailRequiredMessage;
+              }
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                return AppConstants.emailInvalidMessage;
+              }
+              return null;
+            },
           ),
+          const SizedBox(height: AppConstants.paddingS),
+
+          // Campo Senha
+          TextFormField(
+            controller: passwordController,
+            obscureText: !isPasswordVisible,
+            decoration: InputDecoration(
+              hintText: passwordHint,
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+                onPressed: onPasswordVisibilityToggle,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                  width: AppConstants.authInputBorderWidth,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                  width: AppConstants.authInputBorderWidth,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(AppConstants.primaryColorValue),
+                  width: AppConstants.authInputFocusedBorderWidth,
+                ),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AppConstants.passwordRequiredMessage;
+              }
+              if (value.length < AppConstants.minPasswordLength) {
+                return AppConstants.passwordMinLengthMessage;
+              }
+              return null;
+            },
+          ),
+
+          // Campo Confirmar Senha (se necessário)
           if (showConfirmPassword) ...[
-            const SizedBox(height: 16),
-            _ConfirmPasswordField(
+            const SizedBox(height: AppConstants.paddingS),
+            TextFormField(
               controller: confirmPasswordController!,
-              hint: confirmPasswordHint ?? 'Confirme sua senha',
-              isVisible: isPasswordVisible,
-              originalPassword: passwordController.text,
+              obscureText: !isPasswordVisible,
+              decoration: InputDecoration(
+                hintText: confirmPasswordHint ?? AppConstants.confirmPasswordFieldHint,
+                prefixIcon: const Icon(Icons.lock_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderSide: BorderSide(
+                    color: Colors.grey[300]!,
+                    width: AppConstants.authInputBorderWidth,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderSide: BorderSide(
+                    color: Colors.grey[300]!,
+                    width: AppConstants.authInputBorderWidth,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderSide: const BorderSide(
+                    color: Color(AppConstants.primaryColorValue),
+                    width: AppConstants.authInputFocusedBorderWidth,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return AppConstants.confirmPasswordRequiredMessage;
+                }
+                if (value != passwordController.text) {
+                  return AppConstants.passwordMismatchMessage;
+                }
+                return null;
+              },
             ),
           ],
         ],
       ),
     );
-  }
-}
-
-
-class _EmailField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-
-  const _EmailField({required this.controller, required this.hint});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: _InputBorderStyle.standard(),
-        enabledBorder: _InputBorderStyle.standard(),
-        focusedBorder: _InputBorderStyle.focused(),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: _EmailValidator.validate,
-    );
-  }
-}
-
-class _PasswordField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final bool isVisible;
-  final VoidCallback onVisibilityToggle;
-
-  const _PasswordField({
-    required this.controller,
-    required this.hint,
-    required this.isVisible,
-    required this.onVisibilityToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: !isVisible,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(Icons.lock_outlined),
-        suffixIcon: IconButton(
-          icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility),
-          onPressed: onVisibilityToggle,
-        ),
-        border: _InputBorderStyle.standard(),
-        enabledBorder: _InputBorderStyle.standard(),
-        focusedBorder: _InputBorderStyle.focused(),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: _PasswordValidator.validate,
-    );
-  }
-}
-
-class _ConfirmPasswordField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final bool isVisible;
-  final String originalPassword;
-
-  const _ConfirmPasswordField({
-    required this.controller,
-    required this.hint,
-    required this.isVisible,
-    required this.originalPassword,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: !isVisible,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(Icons.lock_outlined),
-        border: _InputBorderStyle.standard(),
-        enabledBorder: _InputBorderStyle.standard(),
-        focusedBorder: _InputBorderStyle.focused(),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: (value) => _PasswordValidator.validateConfirmation(value, originalPassword),
-    );
-  }
-}
-
-class _InputBorderStyle {
-  static OutlineInputBorder standard() => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-  );
-
-  static OutlineInputBorder focused() => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: const BorderSide(color: Color(0xFF667eea), width: 2),
-  );
-}
-
-class _EmailValidator {
-  static String? validate(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email é obrigatório';
-    }
-
-    if (!_isValidEmailFormat(value)) {
-      return 'Por favor, insira um email válido';
-    }
-
-    return null;
-  }
-
-  static bool _isValidEmailFormat(String email) =>
-      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-}
-
-class _PasswordValidator {
-  static const int _minLength = 6;
-
-  static String? validate(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Senha é obrigatória';
-    }
-
-    if (value.length < _minLength) {
-      return 'Senha deve ter pelo menos $_minLength caracteres';
-    }
-
-    return null;
-  }
-
-  static String? validateConfirmation(String? value, String originalPassword) {
-    if (value == null || value.isEmpty) {
-      return 'Confirmação de senha é obrigatória';
-    }
-
-    if (value != originalPassword) {
-      return 'Senhas não coincidem';
-    }
-
-    return null;
   }
 }

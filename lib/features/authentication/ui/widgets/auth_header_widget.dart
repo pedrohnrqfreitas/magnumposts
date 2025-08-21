@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_constants.dart';
 
-/// Widget reutilizável para cabeçalho de auth - SRP (responsabilidade única)
 class AuthHeaderWidget extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -19,37 +19,40 @@ class AuthHeaderWidget extends StatelessWidget {
       children: [
         if (icon != null) ...[
           Container(
-            width: 80,
-            height: 80,
+            width: AppConstants.authHeaderIconSize,
+            height: AppConstants.authHeaderIconSize,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                colors: [
+                  Color(AppConstants.primaryColorValue),
+                  Color(AppConstants.secondaryColorValue),
+                ],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppConstants.authHeaderIconRadius),
             ),
             child: Icon(
               icon,
-              size: 40,
+              size: AppConstants.avatarSizeS,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppConstants.paddingL),
         ],
         Text(
           title,
           style: const TextStyle(
-            fontSize: 28,
+            fontSize: AppConstants.fontSizeXxl,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
+            color: Color(AppConstants.textColorPrimaryValue),
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppConstants.paddingXxs),
         Text(
           subtitle,
           style: const TextStyle(
-            fontSize: 16,
-            color: Color(0xFF718096),
+            fontSize: AppConstants.fontSizeS,
+            color: Color(AppConstants.textColorTertiaryValue),
           ),
           textAlign: TextAlign.center,
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/skeleton_text.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class ProfileSkeleton extends StatelessWidget {
   const ProfileSkeleton({super.key});
@@ -9,144 +10,210 @@ class ProfileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppConstants.paddingL),
       child: SkeletonLoader(
         isLoading: true,
         child: Column(
           children: [
-            _buildProfileHeaderSkeleton(),
-            const SizedBox(height: 32),
-            _buildProfileStatsSkeleton(),
-            const SizedBox(height: 32),
-            _buildProfileInfoSkeleton(),
+            // Header do perfil skeleton
+            Column(
+              children: [
+                const SkeletonBox(
+                  width: AppConstants.profileImageSize,
+                  height: AppConstants.profileImageSize,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(AppConstants.profileImageRadius),
+                  ),
+                ),
+                const SizedBox(height: AppConstants.paddingS),
+                SkeletonBox(
+                  width: 200,
+                  height: AppConstants.fontSizeXl,
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                ),
+                const SizedBox(height: AppConstants.paddingXxs),
+                SkeletonBox(
+                  width: 120,
+                  height: AppConstants.fontSizeXs,
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppConstants.dimenXs),
+            // Stats skeleton
+            Container(
+              padding: const EdgeInsets.all(AppConstants.paddingM),
+              decoration: BoxDecoration(
+                color: const Color(AppConstants.backgroundColorLightValue),
+                borderRadius: BorderRadius.circular(AppConstants.borderRadiusL),
+                border: Border.all(
+                  color: const Color(AppConstants.borderColorLightValue),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      SkeletonBox(
+                        width: AppConstants.iconSizeM,
+                        height: AppConstants.iconSizeM,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: AppConstants.paddingXxs),
+                      SkeletonBox(
+                        width: 30,
+                        height: AppConstants.fontSizeL,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonBox(
+                        width: 50,
+                        height: AppConstants.fontSizeXxs,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: AppConstants.statsDividerWidth,
+                    height: AppConstants.statsContainerHeight,
+                    color: const Color(AppConstants.borderColorLightValue),
+                  ),
+                  Column(
+                    children: [
+                      SkeletonBox(
+                        width: AppConstants.iconSizeM,
+                        height: AppConstants.iconSizeM,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: AppConstants.paddingXxs),
+                      SkeletonBox(
+                        width: 30,
+                        height: AppConstants.fontSizeL,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonBox(
+                        width: 50,
+                        height: AppConstants.fontSizeXxs,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: AppConstants.statsDividerWidth,
+                    height: AppConstants.statsContainerHeight,
+                    color: const Color(AppConstants.borderColorLightValue),
+                  ),
+                  Column(
+                    children: [
+                      SkeletonBox(
+                        width: AppConstants.iconSizeM,
+                        height: AppConstants.iconSizeM,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: AppConstants.paddingXxs),
+                      SkeletonBox(
+                        width: 30,
+                        height: AppConstants.fontSizeL,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonBox(
+                        width: 50,
+                        height: AppConstants.fontSizeXxs,
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppConstants.dimenXs),
+
+            // Info sections skeleton
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppConstants.paddingS),
+                  decoration: BoxDecoration(
+                    color: const Color(AppConstants.backgroundColorCardValue),
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    border: Border.all(
+                      color: const Color(AppConstants.borderColorLightValue),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SkeletonBox(
+                            width: AppConstants.iconSizeS,
+                            height: AppConstants.iconSizeS,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                          ),
+                          const SizedBox(width: AppConstants.paddingXxs),
+                          SkeletonBox(
+                            width: 80,
+                            height: AppConstants.fontSizeS,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppConstants.paddingXs),
+                      const SkeletonText(
+                        height: AppConstants.fontSizeXs,
+                        lines: 2,
+                        spacing: 4,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppConstants.paddingL),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppConstants.paddingS),
+                  decoration: BoxDecoration(
+                    color: const Color(AppConstants.backgroundColorCardValue),
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    border: Border.all(
+                      color: const Color(AppConstants.borderColorLightValue),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SkeletonBox(
+                            width: AppConstants.iconSizeS,
+                            height: AppConstants.iconSizeS,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                          ),
+                          const SizedBox(width: AppConstants.paddingXxs),
+                          SkeletonBox(
+                            width: 80,
+                            height: AppConstants.fontSizeS,
+                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusS),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppConstants.paddingXs),
+                      const SkeletonText(
+                        height: AppConstants.fontSizeXs,
+                        lines: 2,
+                        spacing: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileHeaderSkeleton() {
-    return Column(
-      children: [
-        const SkeletonBox(
-          width: 120,
-          height: 120,
-          borderRadius: BorderRadius.all(Radius.circular(60)),
-        ),
-        const SizedBox(height: 16),
-        SkeletonBox(
-          width: 200,
-          height: 24,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        const SizedBox(height: 8),
-        SkeletonBox(
-          width: 120,
-          height: 14,
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileStatsSkeleton() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItemSkeleton(),
-          _buildStatDivider(),
-          _buildStatItemSkeleton(),
-          _buildStatDivider(),
-          _buildStatItemSkeleton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItemSkeleton() {
-    return Column(
-      children: [
-        SkeletonBox(
-          width: 24,
-          height: 24,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        const SizedBox(height: 8),
-        SkeletonBox(
-          width: 30,
-          height: 20,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        const SizedBox(height: 4),
-        SkeletonBox(
-          width: 50,
-          height: 12,
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 40,
-      color: Colors.grey[300],
-    );
-  }
-
-  Widget _buildProfileInfoSkeleton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInfoSectionSkeleton(),
-        const SizedBox(height: 24),
-        _buildInfoSectionSkeleton(),
-      ],
-    );
-  }
-
-  Widget _buildInfoSectionSkeleton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              SkeletonBox(
-                width: 20,
-                height: 20,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              const SizedBox(width: 8),
-              SkeletonBox(
-                width: 80,
-                height: 16,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const SkeletonText(
-            height: 14,
-            lines: 2,
-            spacing: 4,
-          ),
-        ],
       ),
     );
   }

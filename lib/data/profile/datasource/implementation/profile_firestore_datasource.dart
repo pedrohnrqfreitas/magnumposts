@@ -74,7 +74,6 @@ class ProfileFirestoreDatasource implements IProfileDatasource {
     }
   }
 
-  @override
   Future<void> deleteProfile(String userId) async {
     try {
       await firestoreService.deleteDocument(
@@ -86,7 +85,6 @@ class ProfileFirestoreDatasource implements IProfileDatasource {
     }
   }
 
-  @override
   Stream<ProfileDTO?> watchProfile(String userId) {
     try {
       return firestoreService.streamDocument(

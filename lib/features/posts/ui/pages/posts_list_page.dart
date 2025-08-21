@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:magnumposts/core/widgets/app_empty_state.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../data/posts/models/post_model.dart';
 import '../../../../data/posts/models/user_post_model.dart';
@@ -28,7 +29,6 @@ class PostsListPage extends StatefulWidget {
 
 class _PostsListPageState extends State<PostsListPage> {
   final ScrollController _scrollController = ScrollController();
-
   final Map<int, UserPostModel> _authorsCache = {};
   final Set<int> _loadingAuthors = {};
 
@@ -48,7 +48,7 @@ class _PostsListPageState extends State<PostsListPage> {
   void _setupScrollListener() {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent * 0.8) {
+          _scrollController.position.maxScrollExtent * AppConstants.scrollThreshold) {
         _loadMorePosts();
       }
     });
@@ -109,8 +109,8 @@ class _PostsListPageState extends State<PostsListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Magnum Posts'),
-        backgroundColor: const Color(0xFF667eea),
+        title: const Text(AppConstants.appTitle),
+        backgroundColor: const Color(AppConstants.primaryColorValue),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -126,85 +126,100 @@ class _PostsListPageState extends State<PostsListPage> {
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: _handleAuthStateChange,
-        child: _buildBody(),
-      ),
-    );
-  }
+        child: BlocBuilder<PostsBloc, PostsState>(
+          builder: (context, state) {
+            // Loading skeleton
+            if (state is PostsLoading) {
+              return ListView.builder(
+                padding: const EdgeInsets.all(AppConstants.paddingS),
+                itemCount: AppConstants.skeletonItemCount,
+                itemBuilder: (context, index) => const PostSkeletonCard(),
+              );
+            }
 
-  Widget _buildBody() {
-    return BlocBuilder<PostsBloc, PostsState>(
-      builder: (context, state) {
-        return switch (state) {
-          PostsLoading() => _buildSkeletonLoading(),
-          PostsError(previousPosts: null) => AppErrorWidget(
-            title: 'Erro ao carregar posts',
-            message: state.message,
-            onRetry: _loadInitialPosts,
-          ),
-          PostsLoaded() => _buildLoadedState(state),
-          PostsLoadingMore() => _buildPostsList(
-            PostsLoaded(posts: state.currentPosts),
-            showLoadingMore: true,
-          ),
-          _ => AppEmptyState(
-            title: 'Nenhum post encontrado',
-            message: '',
-            onAction: _loadInitialPosts,
-          ),
-        };
-      },
-    );
-  }
+            // Error state
+            if (state is PostsError && state.previousPosts == null) {
+              return AppErrorWidget(
+                title: 'Erro ao carregar posts',
+                message: state.message,
+                onRetry: _loadInitialPosts,
+              );
+            }
 
-  Widget _buildLoadedState(PostsLoaded state) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAuthorsForPosts(state.posts);
-    });
-    return _buildPostsList(state);
-  }
+            // Loaded state
+            if (state is PostsLoaded) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _loadAuthorsForPosts(state.posts);
+              });
 
-  Widget _buildSkeletonLoading() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 6,
-      itemBuilder: (context, index) => const PostSkeletonCard(),
-    );
-  }
+              return RefreshIndicator(
+                onRefresh: () async => _refreshPosts(),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppConstants.paddingS),
+                  itemCount: state.posts.length,
+                  itemBuilder: (context, index) {
+                    final post = state.posts[index];
+                    final author = _authorsCache[post.userId];
+                    final isLoadingAuthor = _loadingAuthors.contains(post.userId);
 
-  Widget _buildPostsList(PostsLoaded state, {bool showLoadingMore = false}) {
-    return RefreshIndicator(
-      onRefresh: () async => _refreshPosts(),
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: state.posts.length + (showLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index >= state.posts.length) {
-            return _buildLoadingMoreWidget();
-          }
+                    return PostCardWidget(
+                      post: post,
+                      author: author,
+                      isLoadingAuthor: author == null || isLoadingAuthor,
+                      onTap: () => _navigateToPostDetail(post),
+                      onAvatarTap: () => _navigateToProfile(post, author),
+                    );
+                  },
+                ),
+              );
+            }
 
-          final post = state.posts[index];
-          final author = _authorsCache[post.userId];
-          final isLoadingAuthor = _loadingAuthors.contains(post.userId);
+            // Loading more state
+            if (state is PostsLoadingMore) {
+              return RefreshIndicator(
+                onRefresh: () async => _refreshPosts(),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppConstants.paddingS),
+                  itemCount: state.currentPosts.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index >= state.currentPosts.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(AppConstants.paddingS),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(AppConstants.primaryColorValue),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
 
-          return PostCardWidget(
-            post: post,
-            author: author,
-            isLoadingAuthor: author == null || isLoadingAuthor,
-            onTap: () => _navigateToPostDetail(post),
-            onAvatarTap: () => _navigateToProfile(post, author),
-          );
-        },
-      ),
-    );
-  }
+                    final post = state.currentPosts[index];
+                    final author = _authorsCache[post.userId];
+                    final isLoadingAuthor = _loadingAuthors.contains(post.userId);
 
-  Widget _buildLoadingMoreWidget() {
-    return const Padding(
-      padding: EdgeInsets.all(16),
-      child: Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667eea)),
+                    return PostCardWidget(
+                      post: post,
+                      author: author,
+                      isLoadingAuthor: author == null || isLoadingAuthor,
+                      onTap: () => _navigateToPostDetail(post),
+                      onAvatarTap: () => _navigateToProfile(post, author),
+                    );
+                  },
+                ),
+              );
+            }
+
+            // Empty state
+            return AppEmptyState(
+              title: AppConstants.noPostsErrorMessage,
+              message: '',
+              onAction: _loadInitialPosts,
+            );
+          },
         ),
       ),
     );
@@ -255,7 +270,7 @@ class _PostsListPageState extends State<PostsListPage> {
       MaterialPageRoute(
         builder: (_) => ProfileDetailPage(
           userId: post.userId.toString(),
-          userName: author?.name ?? 'Usuário ${post.userId}',
+          userName: author?.name ?? '${AppConstants.userFallbackPrefix}${post.userId}',
         ),
       ),
     );

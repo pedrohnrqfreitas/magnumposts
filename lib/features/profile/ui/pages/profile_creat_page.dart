@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/profile/models/params/create_profile_params.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
-import '../widgets/succesProfileBottomSheet.dart';
+import '../widgets/succes_profile_bottomsheet.dart';
 
 class ProfileCreatePage extends StatefulWidget {
   final String userId;
@@ -59,6 +60,7 @@ class _ProfileCreatePageState extends State<ProfileCreatePage> {
 
   void _createProfile() {
     if (!_formKey.currentState!.validate()) return;
+
     final name = _nameController.text.trim();
     final ageText = _ageController.text.trim();
     final interestsText = _interestsController.text.trim();
@@ -66,20 +68,24 @@ class _ProfileCreatePageState extends State<ProfileCreatePage> {
     final interests = interestsText.isNotEmpty
         ? interestsText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
         : <String>[];
+
     final params = CreateProfileParams(
       userId: widget.userId,
       name: name,
       age: age,
       interests: interests,
     );
+
     context.read<ProfileBloc>().add(
-          ProfileCreateRequested(params: params),
-        );
+      ProfileCreateRequested(params: params),
+    );
   }
 
   void _showSuccessBottomSheet() {
     showModalBottomSheet(
-      context: context, backgroundColor: Colors.transparent, isDismissible: false,
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
       builder: (BuildContext context) {
         return const SuccessProfileBottomSheet();
       },
@@ -90,175 +96,233 @@ class _ProfileCreatePageState extends State<ProfileCreatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Perfil'),
-        backgroundColor: const Color(0xFF667eea),
+        title: const Text(AppConstants.createProfileTitle),
+        backgroundColor: const Color(AppConstants.primaryColorValue),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: _handleProfileStateChange,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppConstants.paddingL),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 32),
-              _buildForm(),
-              const SizedBox(height: 32),
-              _buildSaveButton(),
+              // Header
+              const Column(
+                children: [
+                  Icon(
+                    Icons.person_add_rounded,
+                    size: AppConstants.iconSizeXxl,
+                    color: Color(AppConstants.primaryColorValue),
+                  ),
+                  SizedBox(height: AppConstants.paddingS),
+                  Text(
+                    AppConstants.createProfileButtonText,
+                    style: TextStyle(
+                      fontSize: AppConstants.fontSizeL,
+                      fontWeight: FontWeight.bold,
+                      color: Color(AppConstants.textColorPrimaryValue),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: AppConstants.paddingXxs),
+                  Text(
+                    AppConstants.createProfileSubtitle,
+                    style: TextStyle(
+                      fontSize: AppConstants.fontSizeXs,
+                      color: Color(AppConstants.textColorTertiaryValue),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppConstants.dimenXs),
+
+              // Formulário
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Campo Nome
+                    TextFormField(
+                      controller: _nameController,
+                      enabled: !_isLoading,
+                      decoration: const InputDecoration(
+                        labelText: AppConstants.nameFieldLabel,
+                        hintText: AppConstants.nameFieldHint,
+                        prefixIcon: Icon(Icons.person_rounded),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.borderColorLightValue),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.primaryColorValue),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Color(AppConstants.backgroundColorLightValue),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return AppConstants.nameRequiredMessage;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppConstants.paddingM),
+
+                    // Campo Idade
+                    TextFormField(
+                      controller: _ageController,
+                      enabled: !_isLoading,
+                      decoration: const InputDecoration(
+                        labelText: AppConstants.ageFieldLabel,
+                        hintText: AppConstants.ageFieldHint,
+                        prefixIcon: Icon(Icons.cake_rounded),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.borderColorLightValue),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.primaryColorValue),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Color(AppConstants.backgroundColorLightValue),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          final age = int.tryParse(value);
+                          if (age == null || age < AppConstants.minAge || age > AppConstants.maxAge) {
+                            return AppConstants.invalidAgeMessage;
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppConstants.paddingM),
+
+                    // Campo Interesses
+                    TextFormField(
+                      controller: _interestsController,
+                      enabled: !_isLoading,
+                      decoration: const InputDecoration(
+                        labelText: AppConstants.interestsFieldLabel,
+                        hintText: AppConstants.interestsFieldHint,
+                        prefixIcon: Icon(Icons.favorite_rounded),
+                        helperText: AppConstants.interestsFieldHelper,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.borderColorLightValue),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppConstants.borderRadius),
+                          ),
+                          borderSide: BorderSide(
+                            color: Color(AppConstants.primaryColorValue),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Color(AppConstants.backgroundColorLightValue),
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppConstants.dimenXs),
+
+              // Botão Salvar
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _createProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(AppConstants.primaryColorValue),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(AppConstants.buttonHeight),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isLoading) ...[
+                        const SizedBox(
+                          height: AppConstants.iconSizeS,
+                          width: AppConstants.iconSizeS,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: AppConstants.paddingXs),
+                        const Text(
+                          AppConstants.creatingProfileMessage,
+                          style: TextStyle(
+                            fontSize: AppConstants.fontSizeS,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ] else ...[
+                        const Icon(Icons.add_rounded),
+                        const SizedBox(width: AppConstants.paddingXxs),
+                        const Text(
+                          AppConstants.createProfileButtonText,
+                          style: TextStyle(
+                            fontSize: AppConstants.fontSizeS,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return const Column(
-      children: [
-        Icon(
-          Icons.person_add_rounded,
-          size: 64,
-          color: Color(0xFF667eea),
-        ),
-        SizedBox(height: 16),
-        Text(
-          'Criar seu perfil',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: 8),
-        Text(
-          'Preencha suas informações básicas',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF718096),
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildNameField(),
-          const SizedBox(height: 20),
-          _buildAgeField(),
-          const SizedBox(height: 20),
-          _buildInterestsField(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNameField() {
-    return TextFormField(
-      controller: _nameController,
-      enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'Nome completo',
-        hintText: 'Digite seu nome completo',
-        prefixIcon: Icon(Icons.person_rounded),
-      ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Nome é obrigatório';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildAgeField() {
-    return TextFormField(
-      controller: _ageController,
-      enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'Idade (opcional)',
-        hintText: 'Digite sua idade',
-        prefixIcon: Icon(Icons.cake_rounded),
-      ),
-      keyboardType: TextInputType.number,
-      validator: (value) {
-        if (value != null && value.isNotEmpty) {
-          final age = int.tryParse(value);
-          if (age == null || age < 1 || age > 120) {
-            return 'Digite uma idade válida (1-120)';
-          }
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildInterestsField() {
-    return TextFormField(
-      controller: _interestsController,
-      enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'Interesses (opcional)',
-        hintText: 'Ex: tecnologia, música, esportes',
-        prefixIcon: Icon(Icons.favorite_rounded),
-        helperText: 'Separe os interesses por vírgula',
-      ),
-      maxLines: 3,
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _createProfile,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF667eea),
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_isLoading) ...[
-              const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Criando...',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ] else ...[
-              const Icon(Icons.add_rounded),
-              const SizedBox(width: 8),
-              const Text(
-                'Criar perfil',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
         ),
       ),
     );

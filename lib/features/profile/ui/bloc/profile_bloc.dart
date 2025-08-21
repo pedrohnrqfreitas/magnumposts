@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/profile/models/profile_model.dart';
 import '../../../../data/profile/repository/i_profile_repository.dart';
@@ -13,7 +12,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetProfileUseCase _getProfileUseCase;
   final CreateProfileUseCase _createProfileUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
-  final IProfileRepository _profileRepository;
 
   StreamSubscription<ProfileModel?>? _profileSubscription;
 
@@ -25,7 +23,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   })  : _getProfileUseCase = getProfileUseCase,
         _createProfileUseCase = createProfileUseCase,
         _updateProfileUseCase = updateProfileUseCase,
-        _profileRepository = profileRepository,
         super(const ProfileInitial()) {
 
     on<ProfileLoadRequested>(_onProfileLoadRequested);

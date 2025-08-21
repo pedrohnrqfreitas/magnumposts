@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/posts/models/post_model.dart';
 import '../../../../data/posts/models/user_post_model.dart';
 
@@ -10,30 +11,33 @@ class AuthorSectionWidget extends StatelessWidget {
   final bool isLoadingAuthor;
   final String? authorError;
 
-  const AuthorSectionWidget(
-      {super.key,
-      required this.onClick,
-      required this.author,
-      required this.post,
-      required this.authorError,
-      required this.isLoadingAuthor});
+  const AuthorSectionWidget({
+    super.key,
+    required this.onClick,
+    required this.author,
+    required this.post,
+    required this.authorError,
+    required this.isLoadingAuthor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onClick,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.paddingS),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          color: const Color(AppConstants.backgroundColorLightValue),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          border: Border.all(
+            color: const Color(AppConstants.borderColorLightValue),
+          ),
         ),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFF667eea),
+              radius: AppConstants.avatarRadiusL,
+              backgroundColor: const Color(AppConstants.primaryColorValue),
               child: Text(
                 _getAuthorInitials(),
                 style: const TextStyle(
@@ -42,52 +46,52 @@ class AuthorSectionWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppConstants.paddingS),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (isLoadingAuthor)
                     const Text(
-                      'Carregando autor...',
+                      AppConstants.loadingAuthorMessage,
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF718096),
+                        fontSize: AppConstants.fontSizeS,
+                        color: Color(AppConstants.textColorTertiaryValue),
                       ),
                     )
                   else if (authorError != null)
                     Text(
                       authorError!,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: AppConstants.fontSizeS,
                         color: Colors.red,
                       ),
                     )
                   else if (author != null) ...[
-                    Text(
-                      author!.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D3748),
+                      Text(
+                        author!.name,
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeS,
+                          fontWeight: FontWeight.w600,
+                          color: Color(AppConstants.textColorPrimaryValue),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '@${author!.username}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF718096),
+                      const SizedBox(height: 4),
+                      Text(
+                        '@${author!.username}',
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeXs,
+                          color: Color(AppConstants.textColorTertiaryValue),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
                 ],
               ),
             ),
             const Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: Color(0xFF718096),
+              size: AppConstants.iconSizeXs,
+              color: Color(AppConstants.textColorTertiaryValue),
             ),
           ],
         ),

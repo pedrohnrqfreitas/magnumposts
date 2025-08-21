@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_constants.dart';
+
 class LogoutBottomsheet extends StatelessWidget {
   final VoidCallback onLogout;
 
@@ -11,28 +13,28 @@ class LogoutBottomsheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppConstants.paddingL),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Confirmar Logout',
+            AppConstants.logoutConfirmTitle,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: AppConstants.fontSizeL,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppConstants.paddingS),
           const Text(
-            'Tem certeza que deseja sair?',
+            AppConstants.logoutConfirmMessage,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: AppConstants.fontSizeS,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppConstants.paddingL),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -41,28 +43,28 @@ class LogoutBottomsheet extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: AppConstants.paddingS),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
               ),
             ),
             child: const Text(
-              'Sair',
-              style: TextStyle(fontSize: 16),
+              AppConstants.logoutButtonText,
+              style: TextStyle(fontSize: AppConstants.fontSizeS),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppConstants.paddingXxs),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: AppConstants.paddingS),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
               ),
             ),
             child: const Text(
-              'Cancelar',
-              style: TextStyle(fontSize: 16),
+              AppConstants.cancelButtonText,
+              style: TextStyle(fontSize: AppConstants.fontSizeS),
             ),
           ),
         ],

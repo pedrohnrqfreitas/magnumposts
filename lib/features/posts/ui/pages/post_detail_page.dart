@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:magnumposts/features/posts/ui/widget/author_section_widget.dart';
 
-import '../../../../core/navigation/app_navigator.dart';
 import '../../../../core/navigation/route_names.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/posts/models/post_model.dart';
 import '../../../../data/posts/models/user_post_model.dart';
 import '../../../profile/ui/pages/profile_detail_page.dart';
 import '../../usecase/get_user_by_id_usecase.dart';
-import '../../../../core/constants/app_constants.dart';
+import '../widget/author_section_widget.dart';
 
 class PostDetailPage extends StatefulWidget {
   final PostModel post;
@@ -59,7 +58,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          authorError = 'Erro ao carregar autor';
+          authorError = AppConstants.authorErrorMessage;
           isLoadingAuthor = false;
         });
       }
@@ -70,26 +69,26 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes do Post'),
+        title: const Text(AppConstants.postDetailTitle),
         backgroundColor: const Color(AppConstants.primaryColorValue),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.dimenXxs),
+        padding: const EdgeInsets.all(AppConstants.paddingL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.post.title,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: AppConstants.fontSizeXl,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3748),
-                height: 1.3,
+                color: Color(AppConstants.textColorPrimaryValue),
+                height: AppConstants.lineHeightCompact,
               ),
             ),
-            const SizedBox(height: AppConstants.dimenXxs),
+            const SizedBox(height: AppConstants.paddingL),
             AuthorSectionWidget(
               onClick: _navigateToProfile,
               author: author,
@@ -97,30 +96,32 @@ class _PostDetailPageState extends State<PostDetailPage> {
               authorError: authorError,
               isLoadingAuthor: isLoadingAuthor,
             ),
-            const SizedBox(height: AppConstants.dimenXxs),
+            const SizedBox(height: AppConstants.paddingL),
             const Text(
-              'Conteúdo',
+              AppConstants.contentSectionTitle,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: AppConstants.fontSizeM,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2D3748),
+                color: Color(AppConstants.textColorPrimaryValue),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppConstants.paddingXs),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(AppConstants.dimenXxxs),
+              padding: const EdgeInsets.all(AppConstants.paddingS),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(AppConstants.backgroundColorCardValue),
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(
+                  color: const Color(AppConstants.borderColorLightValue),
+                ),
               ),
               child: Text(
                 widget.post.body,
                 style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF4A5568),
-                  height: 1.6,
+                  fontSize: AppConstants.fontSizeS,
+                  color: Color(AppConstants.textColorSecondaryValue),
+                  height: AppConstants.lineHeightLoose,
                 ),
               ),
             ),
@@ -137,7 +138,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       MaterialPageRoute(
         builder: (_) => ProfileDetailPage(
           userId: widget.post.userId.toString(),
-          userName: author?.name ?? 'Usuário ${widget.post.userId}',
+          userName: author?.name ?? '${AppConstants.userFallbackPrefix}${widget.post.userId}',
         ),
         settings: const RouteSettings(name: RouteNames.profile),
       ),
