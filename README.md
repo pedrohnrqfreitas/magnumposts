@@ -107,3 +107,130 @@ flutter test --coverage
 flutter test test/features/authentication/ui/bloc/auth_bloc_test.dart
 flutter test test/features/posts/ui/bloc/posts_bloc_test.dart
 flutter test test/data/posts/repository/posts_repository_test.dart
+
+# Executar testes de integração
+flutter test test/post_flow_integration_tests.dart
+
+# Gerar relatório de coverage
+genhtml coverage/lcov.info -o coverage/html
+
+🏛️ Arquitetura
+O projeto utiliza Clean Architecture com BLoC Pattern para gerenciamento de estado.
+Estrutura de Pastas
+lib/
+├── core/                    # Serviços e utilitários
+│   ├── constants/          # Constantes da aplicação
+│   ├── di/                # Injeção de dependências
+│   ├── errors/            # Tratamento de erros
+│   ├── services/          # Firebase, HTTP, Firestore
+│   └── widgets/           # Widgets reutilizáveis
+├── data/                   # Camada de dados
+│   ├── authentication/    # Modelos e repositórios de auth
+│   ├── posts/            # Modelos e repositórios de posts
+│   └── profile/          # Modelos e repositórios de perfil
+├── features/              # Funcionalidades
+│   ├── authentication/   # Login e registro
+│   ├── posts/           # Listagem e detalhes
+│   └── profile/         # Perfil do usuário
+└── main.dart             # Ponto de entrada
+
+Padrões Utilizados
+
+BLoC Pattern: Gerenciamento de estado recomendado
+Repository Pattern: Abstração de fontes de dados
+Clean Architecture: Separação de responsabilidades
+Dependency Injection: Inversão de dependências
+
+👥 Usuários para Teste
+Contas Disponíveis
+Email: admin@magnumbank.com
+Senha: admin123
+
+Email: teste@magnumbank.com
+Senha: teste123
+
+Email: user@magnumbank.com
+Senha: user123
+Criar Nova Conta
+
+Na tela de login, toque em "Criar conta"
+Preencha email, senha e confirmação
+Opcionalmente adicione seu nome
+Toque em "Criar Conta"
+
+📱 Como Usar o App
+Login/Registro
+
+Abra o app e faça login com uma das contas de teste
+Ou crie uma nova conta preenchendo os dados solicitados
+
+Navegação nos Posts
+
+Role para baixo para carregar mais posts (paginação automática)
+Toque em um post para ver detalhes completos
+Toque no avatar do autor para ver perfil
+
+Gerenciamento de Perfil
+
+Crie ou edite seu perfil através do avatar
+Preencha informações como nome, idade e interesses
+As informações são salvas no Firestore
+
+Logout
+
+Use o botão de logout no canto superior direito
+Confirme a ação no modal de confirmação
+
+📊 Critérios de Avaliação
+Organização e Estrutura do Código
+
+Uso de boas práticas de organização de pastas e arquivos
+Nomeação clara e consistente de classes, métodos e variáveis
+Separação adequada entre camadas (UI, Business Logic, Data Layer)
+
+Qualidade do Código
+
+Leitura e clareza do código
+Uso de conceitos como SOLID, Clean Architecture
+Redução de código desnecessário ou duplicado
+
+Implementação de Funcionalidades
+
+Funcionalidades entregues conforme requisitos definidos
+Correção e completude na implementação das features
+Uso de widgets Flutter para criar layouts e interações de forma eficiente
+
+UX/UI
+
+Experiência do usuário fluída e responsiva
+Uso adequado de widgets
+
+Gerenciamento de Estado
+
+Escolha do gerenciamento de estado (recomendado BLoC)
+Implementação eficiente e escalável do gerenciamento de estado
+Atualização de UI sincronizada com as mudanças no estado
+
+Conexão com APIs ou Banco de Dados
+
+Configuração e consumo eficiente de APIs
+Uso do Dio para chamadas HTTP
+Implementação de Firestore para banco de dados
+
+Tratamento de Erros
+
+Implementação de mensagens de erro claras para o usuário
+Tratamento de exceções e falhas de rede de forma robusta
+Logs e debug claros no código
+
+Testes
+
+Cobertura de testes unitários e/ou de integração
+Uso adequado de ferramentas como flutter_test
+Implementação de testes automatizados para validar a lógica principal
+
+Documentação
+
+README claro, com instruções de execução e justificativas de escolhas técnicas
+Comentários no código, explicando trechos complexos
+Descrição de como expandir ou escalar a solução no futuro
